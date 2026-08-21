@@ -144,17 +144,19 @@ public class OverlayService : IOverlayService
             };
             _timeLabel.SetTextColor(global::Android.Graphics.Color.White);
             _timeLabel.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
-
             // ボタンを横並びにする行
             var buttonRow = new global::Android.Widget.LinearLayout(themedContext)
             {
                 Orientation = global::Android.Widget.Orientation.Horizontal
             };
 
-            var startButton = new global::Android.Widget.Button(themedContext) { Text = "開始" };
-            startButton.Click += (s, e) => _timerController.Start(TimeSpan.FromSeconds(Settings.DurationSeconds));
+            var startButton = new global::Android.Widget.Button(themedContext) { Text = "START" };
+            startButton.SetTextColor(global::Android.Graphics.Color.White);
+            startButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 0, 30, 60));
 
-            var stopButton = new global::Android.Widget.Button(themedContext) { Text = "中止" };
+            var stopButton = new global::Android.Widget.Button(themedContext) { Text = "STOP" };
+            stopButton.SetTextColor(global::Android.Graphics.Color.White);
+            stopButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 0, 30, 60));
             stopButton.Click += (s, e) =>
             {
                 _timerController.Stop();
@@ -163,7 +165,8 @@ public class OverlayService : IOverlayService
 
             var buttonParams = new global::Android.Widget.LinearLayout.LayoutParams(
                 global::Android.Views.ViewGroup.LayoutParams.WrapContent, global::Android.Views.ViewGroup.LayoutParams.WrapContent);
-            buttonParams.SetMargins(4, 0, 4, 0);
+            buttonParams.SetMargins(20, 0, 4, 0);
+
 
             buttonRow.AddView(startButton, buttonParams);
             buttonRow.AddView(stopButton, buttonParams);

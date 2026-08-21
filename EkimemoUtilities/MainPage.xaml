@@ -6,7 +6,7 @@
     <ScrollView>
         <VerticalStackLayout
             Padding="30,0"
-            Spacing="25">
+            Spacing="15">
             <Label
                 Text="駅メモUtilities"
                 Style="{StaticResource Headline}"
@@ -27,19 +27,22 @@
                 Clicked="OnStartClicked" />
 
 
-            <Label Text="タイマー時間の設定" FontAttributes="Bold" />
+            <Label Text="Settings" FontAttributes="Bold" FontSize="Large"/>
+            <VerticalStackLayout Margin="20,0,0,0" Spacing="8">
+                <Label Text="Timer Duration:"/>
+                <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
 
-            <HorizontalStackLayout Spacing="10">
+                    <Label x:Name="DurationLabel" Text="---" Margin="0,6,0,0"  FontSize="Large"/>
+                    <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>
 
-                <Label x:Name="DurationLabel" Text="---" />
-                <Label x:Name="DurationLabelSec" Text="sec" />
+                    <Stepper x:Name="DurationStepper"
+                    Minimum="1"
+                    Maximum="300"
+                    Increment="1"
+                    ValueChanged="OnDurationChanged" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
 
-                <Stepper x:Name="DurationStepper"
-             Minimum="1"
-             Maximum="300"
-             Increment="1"
-             ValueChanged="OnDurationChanged" />
-            </HorizontalStackLayout>
 
         </VerticalStackLayout>
     </ScrollView>
