@@ -1,10 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
-using EkimemoUtilities.Services;
+﻿using EkimemoUtilities.Services;
+using EkimemoUtilities.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace EkimemoUtilities
 {
     public static class MauiProgram
     {
+        internal static WhatPolygonIs.GeoJSON? geojson = null;
+
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
@@ -15,6 +18,12 @@ namespace EkimemoUtilities
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
+
+            using var stream = FileSystem.OpenAppPackageFileAsync("voronoi.geojson").Result;
+            using var reader = new StreamReader(stream);
+            var contents = reader.ReadToEnd();
+            geojson = new WhatPolygonIs.GeoJSON(contents);
+
 
 #if ANDROID
             builder.Services.AddSingleton<IOverlayService, EkimemoUtilities.Platforms.Android.OverlayService>();

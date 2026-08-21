@@ -1,44 +1,49 @@
-﻿using Android.App;
-using Android.Content;
-using Android.Graphics;
+﻿using Android.Content;
+using Android.Graphics.Drawables;
 using Android.OS;
-using Android.Provider;
+using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using EkimemoUtilities.Services;
-using AndroidUri = Android.Net.Uri;
-using AView = Android.Views.View;
-using AApplication = Android.App.Application;
-using AButton = Android.Widget.Button;
-using AColor = Android.Graphics.Color;
-using ALog = Android.Util.Log;
-using Android.Runtime;
-using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Controls.Platform;
 
 namespace EkimemoUtilities.Platforms.Android;
 
 public class OverlayService : IOverlayService
 {
-    private IWindowManager? _windowManager;
-    private AView? _overlayView;
+    public OverlayService(ITimerController timerController)
+    {
+        _timerController = timerController;
+    }
+
+    private global::Android.Views.IWindowManager? _windowManager;
+    private global::Android.Views.View? _overlayView;
+    private global::Android.Widget.TextView? _timeLabel;
+    private readonly Handler _mainHandler = new(Looper.MainLooper!);
+
+    private readonly ITimerController _timerController;
+
+    private global::Android.Views.WindowManagerLayoutParams? _layoutParams;
+    private int _initialX, _initialY;
+    private float _initialTouchX, _initialTouchY;
 
     public bool IsShowing { get; private set; }
 
     public bool HasPermission()
-        => Settings.CanDrawOverlays(AApplication.Context);
+        => global::Android.Provider.Settings.CanDrawOverlays(global::Android.App.Application.Context);
 
     public void RequestPermission()
     {
         var intent = new Intent(
-            Settings.ActionManageOverlayPermission,
-            AndroidUri.Parse($"package:{AApplication.Context.PackageName}"));
+            global::Android.Provider.Settings.ActionManageOverlayPermission,
+            global::Android.Net.Uri.Parse($"package:{(global::Android.App.Application.Context.PackageName)}"));
         intent.SetFlags(ActivityFlags.NewTask);
-        AApplication.Context.StartActivity(intent);
+        global::Android.App.Application.Context.StartActivity(intent);
     }
+
 
     public void Show()
     {
-        ALog.Debug("OverlayService", $"Show called. IsShowing={IsShowing}");
         if (IsShowing) return;
 
         if (!HasPermission())
@@ -49,69 +54,150 @@ public class OverlayService : IOverlayService
 
         try
         {
-            ALog.Debug("OverlayService", $"Show try (dispatch to main thread)");
+            var context = global::Android.App.Application.Context;
+            var themedContext = new global::Android.Views.ContextThemeWrapper(
+                context, global::Android.Resource.Style.ThemeMaterialLight);
 
-            MainThread.BeginInvokeOnMainThread(() =>
+            var raw = context.GetSystemService(global::Android.Content.Context.WindowService);
+            _windowManager = raw?.JavaCast<global::Android.Views.IWindowManager>();
+
+            // 全体を縦に並べるコンテナ
+            var container = new global::Android.Widget.LinearLayout(themedContext)
             {
-                try
+                Orientation = global::Android.Widget.Orientation.Vertical
+            };
+
+            var density = context.Resources!.DisplayMetrics!.Density;
+            var background = new GradientDrawable();
+            background.SetShape(ShapeType.Rectangle);
+            background.SetCornerRadius(16f * density);//16dpを実ピクセルに変換
+            background.SetColor(global::Android.Graphics.Color.Argb(192, 30, 60, 90));
+            container.SetBackground(background);
+
+
+
+            container.SetPadding(24, 16, 24, 16);
+
+            var dragHandle = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = "≡ 駅メモUtilities",
+                TextSize = 20
+            };
+            dragHandle.SetTextColor(global::Android.Graphics.Color.LightGray);
+            dragHandle.Gravity = global::Android.Views.GravityFlags.Left;
+
+            dragHandle.Touch += (s, e) =>
+            {
+                if (_layoutParams is null || _windowManager is null || _overlayView is null)
+                    return;
+
+                switch (e.Event!.Action)
                 {
-                    var context = AApplication.Context;
-                    var themedContext = new ContextThemeWrapper(
-                        context, global::Android.Resource.Style.ThemeMaterialLight);
+                    case global::Android.Views.MotionEventActions.Down:
+                        _initialX = _layoutParams.X;
+                        _initialY = _layoutParams.Y;
+                        _initialTouchX = e.Event.RawX;
+                        _initialTouchY = e.Event.RawY;
+                        e.Handled = true;
+                        break;
 
-                    // Try themedContext first (Activity/Theme-aware), then application context.
-                    IJavaObject? sys = themedContext.GetSystemService(Context.WindowService) as IJavaObject
-                        ?? context.GetSystemService(Context.WindowService) as IJavaObject;
-                    try
-                    {
-                        _windowManager = sys != null ? sys.JavaCast<IWindowManager>() : null;
-                    }
-                    catch (Exception castEx)
-                    {
-                        ALog.Warn("OverlayService", $"WindowManager cast failed: {castEx}");
-                        _windowManager = null;
-                    }
-                    if (_windowManager is null)
-                    {
-                        ALog.Warn("OverlayService", "GetSystemService returned null for WindowService");
-                    }
+                    case global::Android.Views.MotionEventActions.Move:
+                        _layoutParams.X = _initialX + (int)(e.Event.RawX - _initialTouchX);
+                        _layoutParams.Y = _initialY - (int)(e.Event.RawY - _initialTouchY);
+                        _windowManager.UpdateViewLayout(_overlayView, _layoutParams);
+                        e.Handled = true;
+                        break;
 
-                    var button = new AButton(themedContext) { Text = "ああああ×ああああ" };
-                    button.SetBackgroundColor(AColor.Red);
-                    button.SetTextColor(AColor.White);
-                    button.Click += (s, e) => Hide();
-                    _overlayView = button;
-
-                    var overlayType = Build.VERSION.SdkInt >= BuildVersionCodes.O
-                        ? WindowManagerTypes.ApplicationOverlay
-                        : WindowManagerTypes.Phone;
-
-                    var layoutParams = new WindowManagerLayoutParams(
-                        300,
-                        300,
-                        overlayType,
-                        WindowManagerFlags.NotFocusable,
-                        Format.Translucent)
-                    {
-                        Gravity = GravityFlags.Center,
-                        X = 10,
-                        Y = 30
-                    };
-
-                    ALog.Debug("OverlayService", $"_windowManager is null: {_windowManager == null}");
-                    _windowManager?.AddView(_overlayView, layoutParams);
-                    IsShowing = true;
-                    ALog.Debug("OverlayService", $"Show added view on main thread");
+                    case global::Android.Views.MotionEventActions.Up:
+                        e.Handled = true;
+                        break;
                 }
-                catch (Exception ex)
-                {
-                    ALog.Error("OverlayService", $"表示に失敗 (main thread): {ex}");
-                }
-            });
+            };
+            container.AddView(dragHandle);
+
+            /*
+            var divider = new global::Android.Views.View(themedContext);
+            divider.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 255, 255, 255));
+            var dividerParams = new global::Android.Widget.LinearLayout.LayoutParams(
+                400, (int)(1 * density));
+            dividerParams.SetMargins(0, 8, 0, 8);
+            divider.LayoutParameters = dividerParams;
+            container.AddView(divider);
+            */
+
+            var div = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = "--------------------",
+                TextSize = 20
+            };
+            div.SetTextColor(global::Android.Graphics.Color.LightGray);
+            div.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
+
+            container.AddView(div);
+
+
+            // 残り時間表示
+            _timeLabel = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = FormatTime(TimerForegroundService.RemainingSeconds),
+                TextSize = 36
+            };
+            _timeLabel.SetTextColor(global::Android.Graphics.Color.White);
+            _timeLabel.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
+
+            // ボタンを横並びにする行
+            var buttonRow = new global::Android.Widget.LinearLayout(themedContext)
+            {
+                Orientation = global::Android.Widget.Orientation.Horizontal
+            };
+
+            var startButton = new global::Android.Widget.Button(themedContext) { Text = "開始" };
+            startButton.Click += (s, e) => _timerController.Start(TimeSpan.FromSeconds(Settings.DurationSeconds));
+
+            var stopButton = new global::Android.Widget.Button(themedContext) { Text = "中止" };
+            stopButton.Click += (s, e) =>
+            {
+                _timerController.Stop();
+                _timeLabel?.Text = FormatTime(0);
+            };
+
+            var buttonParams = new global::Android.Widget.LinearLayout.LayoutParams(
+                global::Android.Views.ViewGroup.LayoutParams.WrapContent, global::Android.Views.ViewGroup.LayoutParams.WrapContent);
+            buttonParams.SetMargins(4, 0, 4, 0);
+
+            buttonRow.AddView(startButton, buttonParams);
+            buttonRow.AddView(stopButton, buttonParams);
+
+            container.AddView(_timeLabel);
+            container.AddView(buttonRow);
+            _overlayView = container;
+
+            var overlayType = Build.VERSION.SdkInt >= BuildVersionCodes.O
+                ? global::Android.Views.WindowManagerTypes.ApplicationOverlay
+                : global::Android.Views.WindowManagerTypes.Phone;
+
+            var layoutParams = new global::Android.Views.WindowManagerLayoutParams(
+                global::Android.Views.WindowManagerLayoutParams.WrapContent,
+                global::Android.Views.WindowManagerLayoutParams.WrapContent,
+                overlayType,
+                global::Android.Views.WindowManagerFlags.NotFocusable,
+                global::Android.Graphics.Format.Translucent)
+            {
+                Gravity = global::Android.Views.GravityFlags.Bottom | global::Android.Views.GravityFlags.Left,
+                X = 100,
+                Y = 300
+            };
+            _layoutParams = layoutParams;
+            _windowManager?.AddView(_overlayView, layoutParams);
+
+            IsShowing = true;
+
+
+            TimerForegroundService.RemainingChanged += OnRemainingChanged;
         }
         catch (Exception ex)
         {
-            ALog.Error("OverlayService", $"表示に失敗: {ex}");
+            global::Android.Util.Log.Error("OverlayService", $"表示に失敗: {ex}");
         }
     }
 
@@ -126,8 +212,23 @@ public class OverlayService : IOverlayService
 
     public void Toggle()
     {
-        ALog.Debug("OverlayService", $"Toggle called. IsShowing={IsShowing}");
+        global::Android.Util.Log.Debug("OverlayService", $"Toggle called. IsShowing={IsShowing}");
         if (IsShowing) Hide();
         else Show();
+    }
+
+    private void OnRemainingChanged(int seconds)
+    {
+        _mainHandler.Post(() =>
+        {
+            _timeLabel?.Text = FormatTime(seconds);
+        });
+    }
+
+    private static string FormatTime(int totalSeconds)
+    {
+        if (totalSeconds < 0) totalSeconds = 0;
+        var span = TimeSpan.FromSeconds(totalSeconds);
+        return span.ToString(@"mm\:ss");
     }
 }

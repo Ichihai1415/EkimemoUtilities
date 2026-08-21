@@ -79,6 +79,7 @@ public class TimerForegroundService : Service
         _remainingSeconds = seconds;
         RemainingSeconds = _remainingSeconds;
         IsRunning = true;
+        RemainingChanged?.Invoke(_remainingSeconds);
 
         _timer?.Dispose();
         _timer = new System.Threading.Timer(OnTick, null, 1000, 1000);
@@ -92,8 +93,28 @@ public class TimerForegroundService : Service
 
         if (_remainingSeconds <= 0)
         {
+            Vibrate();
             Completed?.Invoke();
             StopTimer();
+        }
+    }
+
+    private void Vibrate()
+    {
+        var vibrator = (global::Android.OS.Vibrator?)GetSystemService(VibratorService);
+        if (vibrator is null) return;
+
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+        {
+            var pattern = new long[] { 0, 500, 500, 500, 500, 2000 };
+            var effect = VibrationEffect.CreateWaveform(pattern, -1);
+            vibrator.Vibrate(effect);
+        }
+        else
+        {
+#pragma warning disable CA1422
+            vibrator.Vibrate(3000);
+#pragma warning restore CA1422
         }
     }
 
