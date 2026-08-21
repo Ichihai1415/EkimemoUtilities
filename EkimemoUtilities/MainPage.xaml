@@ -34,6 +34,10 @@
             <Button x:Name="ToggleOverlayButton"
                 Text="ポップアップを表示"
                 Clicked="OnToggleOverlayClicked" />
+
+            <Button x:Name="StartTimerButton"
+                Text="タイマーを開始"
+                Clicked="OnStartClicked" />
         </VerticalStackLayout>
     </ScrollView>
 

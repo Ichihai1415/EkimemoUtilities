@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using EkimemoUtilities.Services;
 
 namespace EkimemoUtilities
 {
@@ -16,7 +17,9 @@ namespace EkimemoUtilities
                 });
 
 #if ANDROID
-            builder.Services.AddSingleton<Services.IOverlayService, EkimemoUtilities.Platforms.Android.OverlayService>();
+            builder.Services.AddSingleton<IOverlayService, EkimemoUtilities.Platforms.Android.OverlayService>();
+            builder.Services.AddSingleton<ITimerController, EkimemoUtilities.Platforms.Android.TimerController>();
+
 #endif
 
             builder.Services.AddTransient<MainPage>();

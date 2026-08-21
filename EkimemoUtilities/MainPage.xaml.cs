@@ -24,11 +24,13 @@ namespace EkimemoUtilities
         }
 
         private readonly IOverlayService _overlayService;
+        private readonly ITimerController _timerController;
 
-        public MainPage(IOverlayService overlayService)
+        public MainPage(IOverlayService overlayService, ITimerController timerController)
         {
             InitializeComponent();
             _overlayService = overlayService;
+            _timerController = timerController;
         }
 
         private void OnToggleOverlayClicked(object sender, EventArgs e)
@@ -37,6 +39,26 @@ namespace EkimemoUtilities
             ToggleOverlayButton.Text = _overlayService.IsShowing
                 ? "ポップアップを非表示"
                 : "ポップアップを表示";
+        }
+
+        private async void OnStartClicked(object sender, EventArgs e)
+        {
+            var locationStatus = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+            if (locationStatus != PermissionStatus.Granted)
+            {
+                await DisplayAlert("権限が必要です", "タイマー機能を使うには位置情報の許可が必要です。", "OK");
+                return;
+            }
+
+#if ANDROID
+    if (OperatingSystem.IsAndroidVersionAtLeast(33))
+    {
+        await Permissions.RequestAsync<Platforms.Android.PostNotificationsPermission>();
+        // 拒否されても致命的ではないので、ここではエラー扱いにしない
+    }
+#endif
+
+            _timerController.Start(TimeSpan.FromMinutes(5));
         }
     }
 }
