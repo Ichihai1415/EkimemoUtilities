@@ -30,6 +30,10 @@
                 SemanticProperties.Hint="Counts the number of times you click"
                 Clicked="OnCounterClicked"
                 HorizontalOptions="Fill" />
+
+            <Button x:Name="ToggleOverlayButton"
+                Text="ポップアップを表示"
+                Clicked="OnToggleOverlayClicked" />
         </VerticalStackLayout>
     </ScrollView>
 

@@ -15,8 +15,14 @@ namespace EkimemoUtilities
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+#if ANDROID
+            builder.Services.AddSingleton<Services.IOverlayService, EkimemoUtilities.Platforms.Android.OverlayService>();
+#endif
+
+            builder.Services.AddTransient<MainPage>();
+
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
             return builder.Build();

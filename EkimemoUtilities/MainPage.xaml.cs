@@ -1,4 +1,6 @@
-﻿namespace EkimemoUtilities
+﻿using EkimemoUtilities.Services;
+
+namespace EkimemoUtilities
 {
     public partial class MainPage : ContentPage
     {
@@ -19,6 +21,22 @@
                 CounterBtn.Text = $"Clicked {count} times";
 
             SemanticScreenReader.Announce(CounterBtn.Text);
+        }
+
+        private readonly IOverlayService _overlayService;
+
+        public MainPage(IOverlayService overlayService)
+        {
+            InitializeComponent();
+            _overlayService = overlayService;
+        }
+
+        private void OnToggleOverlayClicked(object sender, EventArgs e)
+        {
+            _overlayService.Toggle();
+            ToggleOverlayButton.Text = _overlayService.IsShowing
+                ? "ポップアップを非表示"
+                : "ポップアップを表示";
         }
     }
 }
