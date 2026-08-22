@@ -169,11 +169,11 @@ public class TimerForegroundService : Service
 
     private void StartForegroundNotification()
     {
-        EnsureChannel();
+        EnsureChannels();
 
         var notification = new NotificationCompat.Builder(this, ChannelId)
-            .SetContentTitle("タイマー動作中")
-            .SetContentText("残り時間を計測しています")
+            .SetContentTitle("稼働中")
+            .SetContentText("Ekimemo Utilities: Foreground Service is running.")
             .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo) // 暫定アイコン
             .SetOngoing(true)
             .Build();
@@ -181,17 +181,6 @@ public class TimerForegroundService : Service
         StartForeground(NotificationId, notification);
     }
 
-    private void EnsureChannel()
-    {
-        if (Build.VERSION.SdkInt < BuildVersionCodes.O) return;
-
-        var manager = (NotificationManager?)GetSystemService(NotificationService);
-        if (manager?.GetNotificationChannel(ChannelId) == null)
-        {
-            var channel = new NotificationChannel(ChannelId, "タイマー通知", NotificationImportance.Low);
-            manager?.CreateNotificationChannel(channel);
-        }
-    }
 
     private void StartCountdown(int seconds)
     {
@@ -213,6 +202,7 @@ public class TimerForegroundService : Service
         if (_remainingSeconds <= 0)
         {
             Vibrate();
+            ShowCompletionNotification();
             Completed?.Invoke();
             StopTimer();
         }
@@ -268,8 +258,57 @@ public class TimerForegroundService : Service
         base.OnDestroy();
     }
 
+    private const string ChannelIdCompletion = "timer_completion_channel";
+    private const int CompletionNotificationId = 1002;
+    private void ShowCompletionNotification()
+    {
+        if (Settings.NotificationEnabled)
+        {
+            var notification = new NotificationCompat.Builder(this, ChannelIdCompletion)
+                .SetContentTitle("タイマー終了")
+                .SetContentText("設定した時間が経過しました")
+                .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
+                .SetAutoCancel(true)
+                .Build();
+
+            NotificationManagerCompat.From(this).Notify(CompletionNotificationId, notification);
+        }
+    }
+
+    private const string ChannelIdTimer = "timer_channel";
+
+    internal const int NotificationStationId = 1003;
+    internal const string ChannelIdStation = "station_channel";
+
+    private void EnsureChannels()
+    {
+        if (Build.VERSION.SdkInt < BuildVersionCodes.O) return;
+
+        var manager = (NotificationManager?)GetSystemService(NotificationService);
+        if (manager is null) return;
+
+        if (manager.GetNotificationChannel(ChannelIdTimer) == null)
+        {
+            var timerChannel = new NotificationChannel(
+                ChannelIdTimer, "サービス動作中通知", NotificationImportance.Low);
+            manager.CreateNotificationChannel(timerChannel);
+        }
+
+        if (manager.GetNotificationChannel(ChannelIdCompletion) == null)
+        {
+            var completionChannel = new NotificationChannel(
+                ChannelIdCompletion, "タイマー終了通知", NotificationImportance.Default);
+            manager.CreateNotificationChannel(completionChannel);
+        }
 
 
+        if (manager.GetNotificationChannel(ChannelIdStation) == null)
+        {
+            var stationChannel = new NotificationChannel(
+                ChannelIdStation, "駅変化通知", NotificationImportance.Default);
+            manager.CreateNotificationChannel(stationChannel);
+        }
+    }
 
 
 }

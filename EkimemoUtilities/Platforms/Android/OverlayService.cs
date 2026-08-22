@@ -1,9 +1,11 @@
-﻿using Android.Content;
+﻿using Android.App;
+using Android.Content;
 using Android.Graphics.Drawables;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
+using AndroidX.Core.App;
 using EkimemoUtilities.Services;
 using Microsoft.Maui.Controls.Platform;
 
@@ -368,6 +370,7 @@ public class OverlayService : IOverlayService
         {
             if (lastStationName != "" && lastStationName != stationName)
             {
+                ShowOverlayNotification("チェックインしよう！", stationName + "駅エリアに入りました");
                 Vibrate();
             }
             lastStationName = stationName!;
@@ -411,4 +414,22 @@ public class OverlayService : IOverlayService
         launchIntent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ReorderToFront);
         context.StartActivity(launchIntent);
     }
+
+    private void ShowOverlayNotification(string title, string text)
+    {
+        if (Settings.NotificationEnabled)
+        {
+            var context = global::Android.App.Application.Context;
+
+            var notification = new NotificationCompat.Builder(context, TimerForegroundService.ChannelIdStation)
+                .SetContentTitle(title)
+                .SetContentText(text)
+                .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
+                .SetAutoCancel(true)
+                .Build();
+
+            NotificationManagerCompat.From(context).Notify(TimerForegroundService.NotificationStationId, notification);
+        }
+    }
+
 }
