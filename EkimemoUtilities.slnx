@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="EkimemoUtilities/EkimemoUtilities.csproj" />
+  <Project Path="EkimemoUtilities/EkimemoUtilities.csproj">
+    <Deploy />
+  </Project>
 </Solution>

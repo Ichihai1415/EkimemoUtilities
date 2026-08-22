@@ -46,7 +46,7 @@
 
                     <Stepper x:Name="DurationStepper"
                     Minimum="1"
-                    Maximum="300"
+                    Maximum="360"
                     Increment="1"
                     ValueChanged="OnDurationChanged" />
                 </HorizontalStackLayout>

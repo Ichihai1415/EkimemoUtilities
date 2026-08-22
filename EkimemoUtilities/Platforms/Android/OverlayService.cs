@@ -45,6 +45,9 @@ public class OverlayService : IOverlayService
         global::Android.App.Application.Context.StartActivity(intent);
     }
 
+    TextView? _div;
+    TextView? _div2;
+    LinearLayout? _buttonRow;
 
     public void Show()
     {
@@ -89,7 +92,7 @@ public class OverlayService : IOverlayService
 
             var threeLine = new global::Android.Widget.TextView(themedContext)
             {
-                Text = "≡",
+                Text = "≡ ",
                 TextSize = 20
             };
 
@@ -97,7 +100,7 @@ public class OverlayService : IOverlayService
             threeLine.SetTextColor(global::Android.Graphics.Color.White);
             threeLine.Gravity = global::Android.Views.GravityFlags.Left;
 
-            threeLine.Click += (s, e) => OpenMainApp();
+            //threeLine.Click += (s, e) => OpenMainApp();
             threeLine.Touch += (s, e) =>
             {
                 if (_layoutParams is null || _windowManager is null || _overlayView is null)
@@ -128,39 +131,14 @@ public class OverlayService : IOverlayService
 
             var dragHandle = new global::Android.Widget.TextView(themedContext)
             {
-                Text = " 駅メモUtilities",
+                Text = "駅メモUtilities",
                 TextSize = 20
             };
             dragHandle.SetTextColor(global::Android.Graphics.Color.LightGray);
             dragHandle.Gravity = global::Android.Views.GravityFlags.Left;
 
-            dragHandle.Touch += (s, e) =>
-            {
-                if (_layoutParams is null || _windowManager is null || _overlayView is null)
-                    return;
-
-                switch (e.Event!.Action)
-                {
-                    case global::Android.Views.MotionEventActions.Down:
-                        _initialX = _layoutParams.X;
-                        _initialY = _layoutParams.Y;
-                        _initialTouchX = e.Event.RawX;
-                        _initialTouchY = e.Event.RawY;
-                        e.Handled = true;
-                        break;
-
-                    case global::Android.Views.MotionEventActions.Move:
-                        _layoutParams.X = _initialX + (int)(e.Event.RawX - _initialTouchX);
-                        _layoutParams.Y = _initialY - (int)(e.Event.RawY - _initialTouchY);
-                        _windowManager.UpdateViewLayout(_overlayView, _layoutParams);
-                        e.Handled = true;
-                        break;
-
-                    case global::Android.Views.MotionEventActions.Up:
-                        e.Handled = true;
-                        break;
-                }
-            };
+            dragHandle.Click += (s, e) => ToggleMinView();
+            dragHandle.LongClick += (s, e) => OpenMainApp();
 
             headRow.AddView(threeLine);
             headRow.AddView(dragHandle);
@@ -176,15 +154,15 @@ public class OverlayService : IOverlayService
             container.AddView(divider);
             */
 
-            var div = new global::Android.Widget.TextView(themedContext)
+            _div = new global::Android.Widget.TextView(themedContext)
             {
                 Text = "----------------------------------------",
                 TextSize = 10
             };
-            div.SetTextColor(global::Android.Graphics.Color.LightGray);
-            div.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
+            _div.SetTextColor(global::Android.Graphics.Color.LightGray);
+            _div.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
 
-            container.AddView(div);
+            container.AddView(_div);
 
 
             _stationLabel = new TextView(themedContext)
@@ -194,7 +172,7 @@ public class OverlayService : IOverlayService
             };
             _stationLabel.SetTextColor(global::Android.Graphics.Color.White);
             _stationLabel.Gravity = GravityFlags.CenterHorizontal;
-            if (_stationLabel.Text == "")
+            if (_stationLabel.Text == "" || _isMinimized)
                 _stationLabel.Visibility = ViewStates.Gone;
             else
                 _stationLabel.Visibility = ViewStates.Visible;
@@ -212,15 +190,15 @@ public class OverlayService : IOverlayService
             container.AddView(_locationLabel);
 
 
-            var div2 = new global::Android.Widget.TextView(themedContext)
+            _div2 = new global::Android.Widget.TextView(themedContext)
             {
                 Text = "----------------------------------------",
                 TextSize = 10
             };
-            div2.SetTextColor(global::Android.Graphics.Color.LightGray);
-            div2.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
+            _div2.SetTextColor(global::Android.Graphics.Color.LightGray);
+            _div2.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
 
-            container.AddView(div2);
+            container.AddView(_div2);
 
 
             // 残り時間表示
@@ -233,7 +211,7 @@ public class OverlayService : IOverlayService
             _timeLabel.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
 
             // ボタンを横並びにする行
-            var buttonRow = new global::Android.Widget.LinearLayout(themedContext)
+            _buttonRow = new global::Android.Widget.LinearLayout(themedContext)
             {
                 Orientation = global::Android.Widget.Orientation.Horizontal
             };
@@ -244,7 +222,7 @@ public class OverlayService : IOverlayService
             startButton.Click += (s, e) => _timerController.Start(TimeSpan.FromSeconds(Settings.DurationSeconds));
 
 
-            var stopButton = new global::Android.Widget.Button(themedContext) { Text = "STOP" };
+            var stopButton = new global::Android.Widget.Button(themedContext) { Text = "RESET" };
             stopButton.SetTextColor(global::Android.Graphics.Color.White);
             stopButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 0, 30, 60));
             stopButton.Click += (s, e) =>
@@ -258,11 +236,11 @@ public class OverlayService : IOverlayService
             buttonParams.SetMargins(4, 0, 4, 20);
 
 
-            buttonRow.AddView(startButton, buttonParams);
-            buttonRow.AddView(stopButton, buttonParams);
+            _buttonRow.AddView(startButton, buttonParams);
+            _buttonRow.AddView(stopButton, buttonParams);
 
             container.AddView(_timeLabel);
-            container.AddView(buttonRow);
+            container.AddView(_buttonRow);
 
             //var openAppButton = new global::Android.Widget.Button(themedContext) { Text = "Open Application", TextSize = 12 };
             //openAppButton.Click += (s, e) => OpenMainApp();
@@ -282,7 +260,7 @@ public class OverlayService : IOverlayService
                 global::Android.Views.WindowManagerLayoutParams.WrapContent,
                 global::Android.Views.WindowManagerLayoutParams.WrapContent,
                 overlayType,
-                global::Android.Views.WindowManagerFlags.NotFocusable,
+                global::Android.Views.WindowManagerFlags.NotFocusable | WindowManagerFlags.LayoutNoLimits,
                 global::Android.Graphics.Format.Translucent)
             {
                 Gravity = global::Android.Views.GravityFlags.Bottom | global::Android.Views.GravityFlags.Left,
@@ -357,7 +335,7 @@ public class OverlayService : IOverlayService
     {
         _locationLabel?.Text = FormatLocation(location);
         _stationLabel?.Text = GetStation(location);
-        if (_stationLabel?.Text == "")
+        if (_stationLabel?.Text == "" || _isMinimized)
             _stationLabel?.Visibility = ViewStates.Gone;
         else
             _stationLabel?.Visibility = ViewStates.Visible;
@@ -460,6 +438,19 @@ public class OverlayService : IOverlayService
 
             NotificationManagerCompat.From(context).Notify(TimerForegroundService.NotificationStationId, notification);
         }
+    }
+
+    private bool _isMinimized = false;
+    private void ToggleMinView()
+    {
+        _div?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
+        _stationLabel?.Visibility = _isMinimized ? (_stationLabel?.Text == "" ? ViewStates.Gone : ViewStates.Visible) : ViewStates.Gone;
+        _locationLabel?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
+        _div2?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
+        _timeLabel?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
+        _buttonRow?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
+
+        _isMinimized = !_isMinimized;
     }
 
 }
