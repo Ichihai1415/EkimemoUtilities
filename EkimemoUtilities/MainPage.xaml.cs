@@ -39,7 +39,7 @@ namespace EkimemoUtilities
                 }
                 _locationTracker.Start();
             }
-            ToggleLocationButton.Text = !_locationTracker.IsRunning ? "Getting Location Stop" : "Getting Location Start";
+            ToggleLocationButton.Text = !_locationTracker.IsRunning ? "Stop Getting Location" : "Start Getting Location";
             ToggleLocationButton.BackgroundColor = !_locationTracker.IsRunning ? Color.FromArgb("#2B0B98") : Color.FromArgb("#512BD4");
         }
 
@@ -59,7 +59,7 @@ namespace EkimemoUtilities
             _overlayService.Show();
             ToggleOverlayButton.Text = _overlayService.IsShowing ? "Hide Overlay" : "Show Overlay";
             ToggleOverlayButton.BackgroundColor = _overlayService.IsShowing ? Color.FromArgb("#2B0B98") : Color.FromArgb("#512BD4");
-            ToggleLocationButton.Text = _locationTracker.IsRunning ? "Getting Location Stop" : "Getting Location Start";
+            ToggleLocationButton.Text = _locationTracker.IsRunning ? "Stop Getting Location" : "Start Getting Location";
             ToggleLocationButton.BackgroundColor = _locationTracker.IsRunning ? Color.FromArgb("#2B0B98") : Color.FromArgb("#512BD4");
 
             VibrationCheckBox.IsChecked = Settings.VibrationEnabled;

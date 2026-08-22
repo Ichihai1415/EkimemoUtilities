@@ -118,6 +118,7 @@ public class TimerForegroundService : Service
 
     private void UpdateNotificationWithLocation(global::Android.Locations.Location location)
     {
+        return;
         var text = $"緯度:{location.Latitude:F5} 経度:{location.Longitude:F5}";
 
         var notification = new NotificationCompat.Builder(this, ChannelId)
@@ -125,6 +126,7 @@ public class TimerForegroundService : Service
             .SetContentText(text)
             .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
             .SetOngoing(true)
+            .SetContentIntent(CreateOpenAppPendingIntent())
             .Build();
 
         NotificationManagerCompat.From(this).Notify(NotificationId, notification);
@@ -176,6 +178,7 @@ public class TimerForegroundService : Service
             .SetContentText("Ekimemo Utilities: Foreground Service is running.")
             .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo) // 暫定アイコン
             .SetOngoing(true)
+            .SetContentIntent(CreateOpenAppPendingIntent())
             .Build();
 
         StartForeground(NotificationId, notification);
@@ -269,6 +272,7 @@ public class TimerForegroundService : Service
                 .SetContentText("設定した時間が経過しました")
                 .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
                 .SetAutoCancel(true)
+                .SetContentIntent(CreateOpenAppPendingIntent())
                 .Build();
 
             NotificationManagerCompat.From(this).Notify(CompletionNotificationId, notification);
@@ -290,7 +294,7 @@ public class TimerForegroundService : Service
         if (manager.GetNotificationChannel(ChannelIdTimer) == null)
         {
             var timerChannel = new NotificationChannel(
-                ChannelIdTimer, "サービス動作中通知", NotificationImportance.Low);
+                ChannelIdTimer, "サービス動作中通知", NotificationImportance.Min);
             manager.CreateNotificationChannel(timerChannel);
         }
 
@@ -311,4 +315,18 @@ public class TimerForegroundService : Service
     }
 
 
+
+    internal PendingIntent? CreateOpenAppPendingIntent()
+    {
+        var launchIntent = PackageManager?.GetLaunchIntentForPackage(PackageName!);
+        if (launchIntent is null) return null;
+
+        launchIntent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ReorderToFront);
+
+        var flags = Build.VERSION.SdkInt >= BuildVersionCodes.S
+            ? PendingIntentFlags.Immutable
+            : PendingIntentFlags.UpdateCurrent;
+
+        return PendingIntent.GetActivity(this, 0, launchIntent, flags);
+    }
 }

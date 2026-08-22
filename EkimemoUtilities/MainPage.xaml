@@ -30,7 +30,7 @@
                 BackgroundColor="#512BD4"/>
 
             <Button x:Name="ToggleLocationButton"
-                Text="Getting Location Start" 
+                Text="Start Getting Location" 
                 Clicked="OnToggleLocationClicked"
                 TextColor="White"/>
 
