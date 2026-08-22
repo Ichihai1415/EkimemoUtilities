@@ -129,8 +129,8 @@ public class OverlayService : IOverlayService
 
             var div = new global::Android.Widget.TextView(themedContext)
             {
-                Text = "--------------------",
-                TextSize = 20
+                Text = "----------------------------------------",
+                TextSize = 10
             };
             div.SetTextColor(global::Android.Graphics.Color.LightGray);
             div.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
@@ -138,15 +138,40 @@ public class OverlayService : IOverlayService
             container.AddView(div);
 
 
+            _stationLabel = new TextView(themedContext)
+            {
+                Text = GetStation(_locationTracker.Last),
+                TextSize = 20
+            };
+            _stationLabel.SetTextColor(global::Android.Graphics.Color.White);
+            _stationLabel.Gravity = GravityFlags.CenterHorizontal;
+            if (_stationLabel.Text == "")
+                _stationLabel.Visibility = ViewStates.Gone;
+            else
+                _stationLabel.Visibility = ViewStates.Visible;
+            container.AddView(_stationLabel);
+
+
             _locationLabel = new TextView(themedContext)
             {
                 Text = FormatLocation(_locationTracker.Last),
                 TextSize = 12
             };
-            _locationLabel.SetTextColor(global::Android.Graphics.Color.LightGray);
+            _locationLabel.SetTextColor(global::Android.Graphics.Color.White);
             _locationLabel.Gravity = GravityFlags.CenterHorizontal;
 
             container.AddView(_locationLabel);
+
+
+            var div2 = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = "----------------------------------------",
+                TextSize = 10
+            };
+            div2.SetTextColor(global::Android.Graphics.Color.LightGray);
+            div2.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
+
+            container.AddView(div2);
 
 
             // 残り時間表示
@@ -220,7 +245,7 @@ public class OverlayService : IOverlayService
         }
         catch (Exception ex)
         {
-            global::Android.Util.Log.Error("OverlayService", $"表示に失敗: {ex}");
+            global::Android.Util.Log.Error("OverlayService", $"Display failed: {ex}");
         }
     }
 
@@ -260,27 +285,41 @@ public class OverlayService : IOverlayService
     }
 
     private TextView? _locationLabel;
+    private TextView? _stationLabel;
 
     private void OnLocationChanged(LocationInfo location)
     {
-        // RequestSingleUpdateにLooper.MainLooperを渡しているため、
-        // このコールバックは既にメインスレッドで呼ばれる → Handler.Postは不要
-        if (_locationLabel is not null)
-            _locationLabel.Text = FormatLocation(location);
+        _locationLabel?.Text = FormatLocation(location);
+        _stationLabel?.Text = GetStation(location);
+        if (_stationLabel?.Text == "")
+            _stationLabel?.Visibility = ViewStates.Gone;
+        else
+            _stationLabel?.Visibility = ViewStates.Visible;
     }
 
     private static string FormatLocation(LocationInfo? info)
     {
-        if (info is null) return "位置情報: 取得待ち";
+        if (info is null) return "Waiting for location...";
 
         var altitudeText = info.Value.Altitude is double alt
             ? $"H: {alt:F1}m"
             : "H: ---m";
 
         var accuracyText = info.Value.AccuracyMeters is double acc
-            ? $"A: ±{acc:F1}m"
+            ? $"A: {acc:F1}m"
             : "A: ---m";
 
-        return $"{info.Value.Latitude:F5}, {info.Value.Longitude:F5}\n高度:{altitudeText} 精度:{accuracyText}";
+        var speedText = info.Value.Speed is double spd
+            ? $"S: {(spd * 3.6):F1}km/h"
+            : "S: ---km/h";
+        return $"{info.Value.Latitude:F6}, {info.Value.Longitude:F6}\n{altitudeText} {accuracyText} {speedText}";
+    }
+
+    public static string GetStation(LocationInfo? info)
+    {
+        if (MauiProgram.geojson is null) return "No station data!";
+        if (info is null) return "";
+
+        return MauiProgram.geojson.FindName(info.Value.Latitude, info.Value.Longitude) ?? "(No matching station)";
     }
 }

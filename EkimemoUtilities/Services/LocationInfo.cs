@@ -9,4 +9,5 @@ public readonly record struct LocationInfo(
     double Longitude,
     double? Altitude,
     double? AccuracyMeters,
+    double? Speed,
     DateTime TimestampUtc);

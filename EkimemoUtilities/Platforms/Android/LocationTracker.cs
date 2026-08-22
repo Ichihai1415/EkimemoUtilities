@@ -24,6 +24,7 @@ public class LocationTracker : ILocationTracker
             Latitude: location.Latitude,
             Longitude: location.Longitude,
             Altitude: location.HasAltitude ? location.Altitude : null,
+            Speed: location.HasSpeed ? location.Speed : 0,
             AccuracyMeters: location.HasAccuracy ? location.Accuracy : null,
             TimestampUtc: DateTime.UtcNow);
 
