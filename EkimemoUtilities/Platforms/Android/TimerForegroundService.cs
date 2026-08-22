@@ -220,20 +220,23 @@ public class TimerForegroundService : Service
 
     private void Vibrate()
     {
-        var vibrator = (global::Android.OS.Vibrator?)GetSystemService(VibratorService);
-        if (vibrator is null) return;
+        if (Settings.VibrationEnabled)
+        {
+            var vibrator = (global::Android.OS.Vibrator?)GetSystemService(VibratorService);
+            if (vibrator is null) return;
 
-        if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
-        {
-            var pattern = new long[] { 0, 500, 500, 500, 500, 2000 };
-            var effect = VibrationEffect.CreateWaveform(pattern, -1);
-            vibrator.Vibrate(effect);
-        }
-        else
-        {
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+            {
+                var pattern = new long[] { 0, 500, 500, 500, 500, 2000 };
+                var effect = VibrationEffect.CreateWaveform(pattern, -1);
+                vibrator.Vibrate(effect);
+            }
+            else
+            {
 #pragma warning disable CA1422
-            vibrator.Vibrate(3000);
+                vibrator.Vibrate(3000);
 #pragma warning restore CA1422
+            }
         }
     }
 

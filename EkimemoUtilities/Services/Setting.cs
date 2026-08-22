@@ -19,4 +19,16 @@ public static class Settings
         get => Preferences.Get(IntervalSecondsKey, II_DefaultSeconds);
         set => Preferences.Set(IntervalSecondsKey, value);
     }
+
+    public static bool VibrationEnabled
+    {
+        get => Preferences.Get("vibration_enabled", true);
+        set => Preferences.Set("vibration_enabled", value);
+    }
+
+    public static bool NotificationEnabled
+    {
+        get => Preferences.Get("notification_enabled", true);
+        set => Preferences.Set("notification_enabled", value);
+    }
 }

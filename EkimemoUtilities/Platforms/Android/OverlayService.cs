@@ -7,6 +7,7 @@ using Android.Widget;
 using EkimemoUtilities.Services;
 using Microsoft.Maui.Controls.Platform;
 
+
 namespace EkimemoUtilities.Platforms.Android;
 
 public class OverlayService : IOverlayService
@@ -242,6 +243,7 @@ public class OverlayService : IOverlayService
 
             TimerForegroundService.RemainingChanged += OnRemainingChanged;
             _locationTracker.LocationChanged += OnLocationChanged;
+            _locationTracker.RunningChanged += OnLocationRunningChanged;
         }
         catch (Exception ex)
         {
@@ -257,9 +259,15 @@ public class OverlayService : IOverlayService
 
         TimerForegroundService.RemainingChanged -= OnRemainingChanged;
         _locationTracker.LocationChanged -= OnLocationChanged;
-
+        _locationTracker.RunningChanged -= OnLocationRunningChanged;
         _overlayView = null;
         IsShowing = false;
+    }
+
+    private void OnLocationRunningChanged(bool isRunning)
+    {
+        _stationLabel?.Visibility = ViewStates.Gone;
+        _locationLabel?.Text = isRunning ? "Getting start. Please wait..." : "Getting location is off.";
     }
 
     public void Toggle()
@@ -297,8 +305,9 @@ public class OverlayService : IOverlayService
             _stationLabel?.Visibility = ViewStates.Visible;
     }
 
-    private static string FormatLocation(LocationInfo? info)
+    private string FormatLocation(LocationInfo? info)
     {
+        if (!_locationTracker.IsRunning) return "Getting location is off.";
         if (info is null) return "Waiting for location...";
 
         var altitudeText = info.Value.Altitude is double alt
@@ -315,11 +324,45 @@ public class OverlayService : IOverlayService
         return $"{info.Value.Latitude:F6}, {info.Value.Longitude:F6}\n{altitudeText} {accuracyText} {speedText}";
     }
 
-    public static string GetStation(LocationInfo? info)
+    internal string lastStationName = "";
+
+    public string GetStation(LocationInfo? info)
     {
         if (MauiProgram.geojson is null) return "No station data!";
+        if (!_locationTracker.IsRunning) return "";
         if (info is null) return "";
 
-        return MauiProgram.geojson.FindName(info.Value.Latitude, info.Value.Longitude) ?? "(No matching station)";
+        var stationName = MauiProgram.geojson.FindName(info.Value.Latitude, info.Value.Longitude);
+        if (stationName != null)
+        {
+            if (lastStationName != "" && lastStationName != stationName)
+            {
+                Vibrate();
+            }
+            lastStationName = stationName!;
+        }
+        return stationName ?? "(No matching station)";
+    }
+
+    private void Vibrate()
+    {
+        if (Settings.VibrationEnabled)
+        {
+            var context = global::Android.App.Application.Context;
+            var vibrator = (global::Android.OS.Vibrator?)context.GetSystemService(Context.VibratorService);
+            if (vibrator is null) return;
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+            {
+                var pattern = new long[] { 0, 100, 100, 100, 100, 750, 250, 100, 100, 100, 100, 750 };
+                var effect = VibrationEffect.CreateWaveform(pattern, -1);
+                vibrator.Vibrate(effect);
+            }
+            else
+            {
+#pragma warning disable CA1422
+                vibrator.Vibrate(1000);
+#pragma warning restore CA1422
+            }
+        }
     }
 }

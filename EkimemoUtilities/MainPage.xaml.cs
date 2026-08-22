@@ -19,25 +19,29 @@ namespace EkimemoUtilities
         }
 
 
-
-
-        private async void OnStartLocationClicked(object sender, EventArgs e)
+        private async void OnToggleLocationClicked(object sender, EventArgs e)
         {
-            var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
-            if (status != PermissionStatus.Granted)
+            if (_locationTracker.IsRunning)
             {
-                await DisplayAlert("権限が必要です", "位置情報の許可が必要です。", "OK");
-                return;
+                _locationTracker.Stop();
             }
-
-            _locationTracker.Start();
+            else
+            {
+                var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+                if (status != PermissionStatus.Granted)
+                {
+                    status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                }
+                if (status != PermissionStatus.Granted)
+                {
+                    await DisplayAlertAsync("権限が必要です", "位置情報の許可が必要です。", "OK");
+                    return;
+                }
+                _locationTracker.Start();
+            }
+            ToggleLocationButton.Text = !_locationTracker.IsRunning ? "Getting Location Stop" : "Getting Location Start";
+            ToggleLocationButton.BackgroundColor = !_locationTracker.IsRunning ? Color.FromArgb("#2B0B98") : Color.FromArgb("#512BD4");
         }
-
-        private void OnStopLocationClicked(object sender, EventArgs e)
-        {
-            _locationTracker.Stop();
-        }
-
 
         protected override void OnAppearing()
         {
@@ -52,11 +56,15 @@ namespace EkimemoUtilities
             IntervalStepper.Value = secondsI;
             IntervalLabel.Text = secondsI.ToString();
 
-            //自動表示
             _overlayService.Show();
-            ToggleOverlayButton.Text = _overlayService.IsShowing
-                 ? "Hide Overlay"
-                : "Show Overlay";
+            ToggleOverlayButton.Text = _overlayService.IsShowing ? "Hide Overlay" : "Show Overlay";
+            ToggleOverlayButton.BackgroundColor = _overlayService.IsShowing ? Color.FromArgb("#2B0B98") : Color.FromArgb("#512BD4");
+            ToggleLocationButton.Text = _locationTracker.IsRunning ? "Getting Location Stop" : "Getting Location Start";
+            ToggleLocationButton.BackgroundColor = _locationTracker.IsRunning ? Color.FromArgb("#2B0B98") : Color.FromArgb("#512BD4");
+
+            VibrationCheckBox.IsChecked = Settings.VibrationEnabled;
+            NotificationCheckBox.IsChecked = Settings.NotificationEnabled;
+
         }
 
         private void OnDurationChanged(object sender, ValueChangedEventArgs e)
@@ -78,15 +86,18 @@ namespace EkimemoUtilities
         private void OnToggleOverlayClicked(object sender, EventArgs e)
         {
             _overlayService.Toggle();
-            ToggleOverlayButton.Text = _overlayService.IsShowing
-                ? "Hide Overlay"
-                : "Show Overlay";
+            ToggleOverlayButton.Text = _overlayService.IsShowing ? "Hide Overlay" : "Show Overlay";
+            ToggleOverlayButton.BackgroundColor = _overlayService.IsShowing ? Color.FromArgb("#2B0B98") : Color.FromArgb("#512BD4");
         }
 
         private async void OnStartClicked(object sender, EventArgs e)
         {
-            var locationStatus = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
-            if (locationStatus != PermissionStatus.Granted)
+            var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+            if (status != PermissionStatus.Granted)
+            {
+                status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+            }
+            if (status != PermissionStatus.Granted)
             {
                 await DisplayAlertAsync("権限が必要です", "位置情報の許可が必要です。", "OK");
                 return;
@@ -96,11 +107,20 @@ namespace EkimemoUtilities
             if (OperatingSystem.IsAndroidVersionAtLeast(33))
             {
                 await Permissions.RequestAsync<Platforms.Android.PostNotificationsPermission>();
-                // 拒否されても致命的ではないので、ここではエラー扱いにしない
             }
 #endif
 
             _timerController.Start(TimeSpan.FromSeconds(Settings.DurationSeconds));
+        }
+
+        private void OnVibrationCheckBoxChanged(object sender, CheckedChangedEventArgs e)
+        {
+            Settings.VibrationEnabled = e.Value;
+        }
+
+        private void OnNotificationCheckBoxChanged(object sender, CheckedChangedEventArgs e)
+        {
+            Settings.NotificationEnabled = e.Value;
         }
     }
 }

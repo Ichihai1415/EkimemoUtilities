@@ -16,20 +16,27 @@
                 Text="for Ichihai1415"
                 Style="{StaticResource SubHeadline}"
                 SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="Welcome to dot net Multi platform App U I" />
+                SemanticProperties.Description="This is developed by/for Ichihai1415." />
 
             <Button x:Name="ToggleOverlayButton"
                 Text="Show Overlay"
-                Clicked="OnToggleOverlayClicked" />
+                Clicked="OnToggleOverlayClicked" 
+                TextColor="White"/>
 
             <Button x:Name="StartTimerButton"
                 Text="(Re)Start Timer"
-                Clicked="OnStartClicked" />
+                Clicked="OnStartClicked" 
+                TextColor="White"
+                BackgroundColor="#512BD4"/>
 
-            <Button Text="位置情報取得 開始" Clicked="OnStartLocationClicked" />
-            <Button Text="位置情報取得 停止" Clicked="OnStopLocationClicked" />
+            <Button x:Name="ToggleLocationButton"
+                Text="Getting Location Start" 
+                Clicked="OnToggleLocationClicked"
+                TextColor="White"/>
 
-            <Label Text="Settings" FontAttributes="Bold" FontSize="Large"/>
+            <Border></Border>
+
+            <Label Text="⚙ Settings" FontAttributes="Bold" FontSize="Large"/>
             <VerticalStackLayout Margin="20,0,0,0" Spacing="8">
                 <Label Text="Timer Duration:"/>
                 <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
@@ -44,14 +51,19 @@
                     ValueChanged="OnDurationChanged" />
                 </HorizontalStackLayout>
 
-                <Label Text="GetLocationInterval:" />
-                <Label x:Name="IntervalLabel" Text="---" Margin="0,6,0,0"  FontSize="Large"/>
-                <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>
-                <Stepper x:Name="IntervalStepper"
-                    Minimum="1"
-                    Maximum="300"
-                    Increment="1"
-                    ValueChanged="OnIntervalChanged" />
+                <Label Text="Get Location Interval: &#10; (After changed, restert Getting Location!)" />
+                <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
+                    <Label x:Name="IntervalLabel" Text="---" Margin="0,6,0,0"  FontSize="Large"/>
+                    <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>
+                    <Stepper x:Name="IntervalStepper"
+                        Minimum="1"
+                        Maximum="300"
+                        Increment="1"
+                        ValueChanged="OnIntervalChanged" />
+                </HorizontalStackLayout>
+
+                <CheckBox x:Name="VibrationCheckBox" IsChecked="True" CheckedChanged="OnVibrationCheckBoxChanged"/>
+                <CheckBox x:Name="NotificationCheckBox" IsChecked="True" CheckedChanged="OnNotificationCheckBoxChanged"/>
             </VerticalStackLayout>
 
 

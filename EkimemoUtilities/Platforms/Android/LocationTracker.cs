@@ -12,7 +12,7 @@ public class LocationTracker : ILocationTracker
     public LocationInfo? Last { get; private set; }
 
     public event Action<LocationInfo>? LocationChanged;
-
+    public event Action<bool>? RunningChanged;
     public LocationTracker()
     {
         TimerForegroundService.LocationChanged += OnNativeLocationChanged;
@@ -42,6 +42,8 @@ public class LocationTracker : ILocationTracker
             context.StartForegroundService(intent);
         else
             context.StartService(intent);
+
+        RunningChanged?.Invoke(true);
     }
 
     public void Stop()
@@ -50,5 +52,7 @@ public class LocationTracker : ILocationTracker
         var intent = new Intent(context, typeof(TimerForegroundService));
         intent.SetAction(TimerForegroundService.ActionStopLocation);
         context.StartService(intent);
+
+        RunningChanged?.Invoke(false);
     }
 }
