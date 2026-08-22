@@ -62,8 +62,17 @@
                         ValueChanged="OnIntervalChanged" />
                 </HorizontalStackLayout>
 
-                <CheckBox x:Name="VibrationCheckBox" IsChecked="True" CheckedChanged="OnVibrationCheckBoxChanged"/>
-                <CheckBox x:Name="NotificationCheckBox" IsChecked="True" CheckedChanged="OnNotificationCheckBoxChanged"/>
+                <HorizontalStackLayout Spacing="4">
+                    <CheckBox Margin="-10,10,0,-10" x:Name="VibrationCheckBox" IsChecked="True" CheckedChanged="OnVibrationCheckBoxChanged"/>
+                    <Label Margin="0,22,0,-10" Text="Enable Vibration" />
+                </HorizontalStackLayout>
+
+                <HorizontalStackLayout Spacing="4">
+                    <CheckBox Margin="-10,0,0,0"  x:Name="NotificationCheckBox" IsChecked="True" CheckedChanged="OnNotificationCheckBoxChanged"/>
+                    <Label Margin="0,12,0,0" Text="Enable Notification" />
+                </HorizontalStackLayout>
+
+
             </VerticalStackLayout>
 
 

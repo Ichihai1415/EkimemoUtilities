@@ -150,7 +150,7 @@ public class TimerForegroundService : Service
     }
     private void StartLocationUpdates()
     {
-        var intervalSeconds = Math.Max(5, EkimemoUtilities.Services.Settings.IntervalSeconds);
+        var intervalSeconds = EkimemoUtilities.Services.Settings.IntervalSeconds;
         IsLocationRunning = true;
 
         _locationTimer?.Dispose();

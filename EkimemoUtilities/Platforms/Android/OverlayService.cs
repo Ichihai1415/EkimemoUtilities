@@ -81,9 +81,27 @@ public class OverlayService : IOverlayService
 
             container.SetPadding(24, 16, 24, 16);
 
+            var headRow = new global::Android.Widget.LinearLayout(themedContext)
+            {
+                Orientation = global::Android.Widget.Orientation.Horizontal
+            };
+
+            var threeLine = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = "≡",
+                TextSize = 20
+            };
+
+
+            threeLine.SetTextColor(global::Android.Graphics.Color.White);
+            threeLine.Gravity = global::Android.Views.GravityFlags.Left;
+
+            threeLine.Click += (s, e) => OpenMainApp();
+
+
             var dragHandle = new global::Android.Widget.TextView(themedContext)
             {
-                Text = "≡ 駅メモUtilities",
+                Text = " 駅メモUtilities",
                 TextSize = 20
             };
             dragHandle.SetTextColor(global::Android.Graphics.Color.LightGray);
@@ -116,7 +134,10 @@ public class OverlayService : IOverlayService
                         break;
                 }
             };
-            container.AddView(dragHandle);
+
+            headRow.AddView(threeLine);
+            headRow.AddView(dragHandle);
+            container.AddView(headRow);
 
             /*
             var divider = new global::Android.Views.View(themedContext);
@@ -183,13 +204,14 @@ public class OverlayService : IOverlayService
             };
             _timeLabel.SetTextColor(global::Android.Graphics.Color.White);
             _timeLabel.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
+
             // ボタンを横並びにする行
             var buttonRow = new global::Android.Widget.LinearLayout(themedContext)
             {
                 Orientation = global::Android.Widget.Orientation.Horizontal
             };
 
-            var startButton = new global::Android.Widget.Button(themedContext) { Text = "START" };
+            var startButton = new global::Android.Widget.Button(themedContext) { Text = "(RE)START" };
             startButton.SetTextColor(global::Android.Graphics.Color.White);
             startButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 0, 30, 60));
             startButton.Click += (s, e) => _timerController.Start(TimeSpan.FromSeconds(Settings.DurationSeconds));
@@ -206,7 +228,7 @@ public class OverlayService : IOverlayService
 
             var buttonParams = new global::Android.Widget.LinearLayout.LayoutParams(
                 global::Android.Views.ViewGroup.LayoutParams.WrapContent, global::Android.Views.ViewGroup.LayoutParams.WrapContent);
-            buttonParams.SetMargins(20, 0, 4, 0);
+            buttonParams.SetMargins(4, 0, 4, 20);
 
 
             buttonRow.AddView(startButton, buttonParams);
@@ -214,6 +236,15 @@ public class OverlayService : IOverlayService
 
             container.AddView(_timeLabel);
             container.AddView(buttonRow);
+
+            //var openAppButton = new global::Android.Widget.Button(themedContext) { Text = "Open Application", TextSize = 12 };
+            //openAppButton.Click += (s, e) => OpenMainApp();
+            //openAppButton.SetTextColor(global::Android.Graphics.Color.White);
+            //openAppButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 127, 159, 191));
+            //
+            //container.AddView(openAppButton);
+
+
             _overlayView = container;
 
             var overlayType = Build.VERSION.SdkInt >= BuildVersionCodes.O
@@ -364,5 +395,20 @@ public class OverlayService : IOverlayService
 #pragma warning restore CA1422
             }
         }
+    }
+    private void OpenMainApp()
+    {
+        var context = global::Android.App.Application.Context;
+        var packageManager = context.PackageManager;
+
+        var launchIntent = packageManager?.GetLaunchIntentForPackage(context.PackageName!);
+        if (launchIntent is null)
+        {
+            global::Android.Util.Log.Error("OverlayService", "起動用Intentの取得に失敗");
+            return;
+        }
+
+        launchIntent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ReorderToFront);
+        context.StartActivity(launchIntent);
     }
 }
