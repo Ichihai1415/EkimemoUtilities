@@ -9,11 +9,33 @@ namespace EkimemoUtilities
         private readonly IOverlayService _overlayService;
 
         private readonly ITimerController _timerController;
-        public MainPage(IOverlayService overlayService, ITimerController timerController)
+        private readonly ILocationTracker _locationTracker;
+        public MainPage(IOverlayService overlayService, ITimerController timerController, ILocationTracker locationTracker)
         {
             InitializeComponent();
             _overlayService = overlayService;
             _timerController = timerController;
+            _locationTracker = locationTracker;
+        }
+
+
+
+
+        private async void OnStartLocationClicked(object sender, EventArgs e)
+        {
+            var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+            if (status != PermissionStatus.Granted)
+            {
+                await DisplayAlert("権限が必要です", "位置情報の許可が必要です。", "OK");
+                return;
+            }
+
+            _locationTracker.Start();
+        }
+
+        private void OnStopLocationClicked(object sender, EventArgs e)
+        {
+            _locationTracker.Stop();
         }
 
 
@@ -22,9 +44,14 @@ namespace EkimemoUtilities
             base.OnAppearing();
 
             // 画面表示のたびに、保存済みの設定をUIに反映する
-            var seconds = Settings.DurationSeconds;
-            DurationStepper.Value = seconds;
-            DurationLabel.Text = seconds.ToString();
+            var secondsDS = Settings.DurationSeconds;
+            DurationStepper.Value = secondsDS;
+            DurationLabel.Text = secondsDS.ToString();
+
+            var secondsI = Settings.IntervalSeconds;
+            IntervalStepper.Value = secondsI;
+            IntervalLabel.Text = secondsI.ToString();
+
             //自動表示
             _overlayService.Show();
             ToggleOverlayButton.Text = _overlayService.IsShowing
@@ -37,8 +64,16 @@ namespace EkimemoUtilities
             var seconds = (int)e.NewValue;
             DurationLabel.Text = seconds.ToString();
             Settings.DurationSeconds = seconds;
+
+
         }
 
+        private void OnIntervalChanged(object sender, ValueChangedEventArgs e)
+        {
+            var seconds = (int)e.NewValue;
+            IntervalLabel.Text = seconds.ToString();
+            Settings.IntervalSeconds = seconds;
+        }
 
         private void OnToggleOverlayClicked(object sender, EventArgs e)
         {

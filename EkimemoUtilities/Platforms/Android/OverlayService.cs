@@ -11,17 +11,19 @@ namespace EkimemoUtilities.Platforms.Android;
 
 public class OverlayService : IOverlayService
 {
-    public OverlayService(ITimerController timerController)
+    private readonly ITimerController _timerController;
+    private readonly ILocationTracker _locationTracker;
+
+    public OverlayService(ITimerController timerController, ILocationTracker locationTracker)
     {
         _timerController = timerController;
+        _locationTracker = locationTracker;
     }
 
     private global::Android.Views.IWindowManager? _windowManager;
     private global::Android.Views.View? _overlayView;
     private global::Android.Widget.TextView? _timeLabel;
     private readonly Handler _mainHandler = new(Looper.MainLooper!);
-
-    private readonly ITimerController _timerController;
 
     private global::Android.Views.WindowManagerLayoutParams? _layoutParams;
     private int _initialX, _initialY;
@@ -136,6 +138,17 @@ public class OverlayService : IOverlayService
             container.AddView(div);
 
 
+            _locationLabel = new TextView(themedContext)
+            {
+                Text = FormatLocation(_locationTracker.Last),
+                TextSize = 12
+            };
+            _locationLabel.SetTextColor(global::Android.Graphics.Color.LightGray);
+            _locationLabel.Gravity = GravityFlags.CenterHorizontal;
+
+            container.AddView(_locationLabel);
+
+
             // 残り時間表示
             _timeLabel = new global::Android.Widget.TextView(themedContext)
             {
@@ -153,6 +166,8 @@ public class OverlayService : IOverlayService
             var startButton = new global::Android.Widget.Button(themedContext) { Text = "START" };
             startButton.SetTextColor(global::Android.Graphics.Color.White);
             startButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 0, 30, 60));
+            startButton.Click += (s, e) => _timerController.Start(TimeSpan.FromSeconds(Settings.DurationSeconds));
+
 
             var stopButton = new global::Android.Widget.Button(themedContext) { Text = "STOP" };
             stopButton.SetTextColor(global::Android.Graphics.Color.White);
@@ -193,10 +208,15 @@ public class OverlayService : IOverlayService
             _layoutParams = layoutParams;
             _windowManager?.AddView(_overlayView, layoutParams);
 
+
+
+
+
             IsShowing = true;
 
 
             TimerForegroundService.RemainingChanged += OnRemainingChanged;
+            _locationTracker.LocationChanged += OnLocationChanged;
         }
         catch (Exception ex)
         {
@@ -209,6 +229,10 @@ public class OverlayService : IOverlayService
         if (!IsShowing || _overlayView is null) return;
 
         _windowManager?.RemoveView(_overlayView);
+
+        TimerForegroundService.RemainingChanged -= OnRemainingChanged;
+        _locationTracker.LocationChanged -= OnLocationChanged;
+
         _overlayView = null;
         IsShowing = false;
     }
@@ -233,5 +257,30 @@ public class OverlayService : IOverlayService
         if (totalSeconds < 0) totalSeconds = 0;
         var span = TimeSpan.FromSeconds(totalSeconds);
         return span.ToString(@"mm\:ss");
+    }
+
+    private TextView? _locationLabel;
+
+    private void OnLocationChanged(LocationInfo location)
+    {
+        // RequestSingleUpdateにLooper.MainLooperを渡しているため、
+        // このコールバックは既にメインスレッドで呼ばれる → Handler.Postは不要
+        if (_locationLabel is not null)
+            _locationLabel.Text = FormatLocation(location);
+    }
+
+    private static string FormatLocation(LocationInfo? info)
+    {
+        if (info is null) return "位置情報: 取得待ち";
+
+        var altitudeText = info.Value.Altitude is double alt
+            ? $"H: {alt:F1}m"
+            : "H: ---m";
+
+        var accuracyText = info.Value.AccuracyMeters is double acc
+            ? $"A: ±{acc:F1}m"
+            : "A: ---m";
+
+        return $"{info.Value.Latitude:F5}, {info.Value.Longitude:F5}\n高度:{altitudeText} 精度:{accuracyText}";
     }
 }

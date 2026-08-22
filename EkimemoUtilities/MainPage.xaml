@@ -26,6 +26,8 @@
                 Text="(Re)Start Timer"
                 Clicked="OnStartClicked" />
 
+            <Button Text="位置情報取得 開始" Clicked="OnStartLocationClicked" />
+            <Button Text="位置情報取得 停止" Clicked="OnStopLocationClicked" />
 
             <Label Text="Settings" FontAttributes="Bold" FontSize="Large"/>
             <VerticalStackLayout Margin="20,0,0,0" Spacing="8">
@@ -41,10 +43,20 @@
                     Increment="1"
                     ValueChanged="OnDurationChanged" />
                 </HorizontalStackLayout>
+
+                <Label Text="GetLocationInterval:" />
+                <Label x:Name="IntervalLabel" Text="---" Margin="0,6,0,0"  FontSize="Large"/>
+                <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>
+                <Stepper x:Name="IntervalStepper"
+                    Minimum="1"
+                    Maximum="300"
+                    Increment="1"
+                    ValueChanged="OnIntervalChanged" />
             </VerticalStackLayout>
 
 
         </VerticalStackLayout>
+
     </ScrollView>
 
 </ContentPage>

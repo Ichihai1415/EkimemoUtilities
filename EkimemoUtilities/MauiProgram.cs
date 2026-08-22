@@ -28,6 +28,7 @@ namespace EkimemoUtilities
 #if ANDROID
             builder.Services.AddSingleton<IOverlayService, EkimemoUtilities.Platforms.Android.OverlayService>();
             builder.Services.AddSingleton<ITimerController, EkimemoUtilities.Platforms.Android.TimerController>();
+            builder.Services.AddSingleton<ILocationTracker, EkimemoUtilities.Platforms.Android.LocationTracker>();
 
 #endif
 

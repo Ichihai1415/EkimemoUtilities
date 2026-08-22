@@ -3,6 +3,9 @@ using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using AndroidX.Core.App;
+using Android.Locations;
+using AndroidX.Core.Content;
+using EkimemoUtilities.Services;
 
 namespace EkimemoUtilities.Platforms.Android;
 
@@ -11,6 +14,14 @@ public class TimerForegroundService : Service
 {
     public const string ActionStart = "dev.Ichihai1415.EkimemoUtilities.action.START_TIMER";
     public const string ActionStop = "dev.Ichihai1415.EkimemoUtilities.action.STOP_TIMER";
+
+    public const string ActionStartLocation = "dev.Ichihai1415.EkimemoUtilities.action.START_LOCATION";
+    public const string ActionStopLocation = "dev.Ichihai1415.EkimemoUtilities.action.STOP_LOCATION";
+
+    public static bool IsLocationRunning { get; private set; }
+
+    private bool _isForegroundStarted;
+
     public const string ExtraDurationSeconds = "duration_seconds";
 
     private const int NotificationId = 1001;
@@ -27,26 +38,134 @@ public class TimerForegroundService : Service
 
     public override IBinder? OnBind(Intent? intent) => null;
 
+
+    private LocationManager? _locationManager;
+    private System.Threading.Timer? _locationTimer;
+
+    public static event Action<global::Android.Locations.Location>? LocationChanged;
+    public static global::Android.Locations.Location? LastLocation { get; private set; }
+
+
     public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags flags, int startId)
     {
-        if (intent?.Action == ActionStop)
+        switch (intent?.Action)
         {
-            StopTimer();
-            return StartCommandResult.NotSticky;
-        }
+            case ActionStop:
+                StopTimer();
+                break;
 
-        var seconds = intent?.GetIntExtra(ExtraDurationSeconds, 0) ?? 0;
-        if (seconds <= 0)
-        {
-            StopSelf();
-            return StartCommandResult.NotSticky;
-        }
+            case ActionStartLocation:
+                StartForegroundIfNeeded();
+                StartLocationUpdates();
+                break;
 
-        StartForegroundNotification();
-        StartCountdown(seconds);
+            case ActionStopLocation:
+                StopLocationUpdates();
+                break;
+
+            case ActionStart:
+                var seconds = intent?.GetIntExtra(ExtraDurationSeconds, 0) ?? 0;
+                if (seconds > 0)
+                {
+                    StartForegroundIfNeeded();
+                    StartCountdown(seconds);
+                }
+                break;
+        }
 
         return StartCommandResult.Sticky;
     }
+
+
+
+
+    private void FetchLocationOnce()
+    {
+        if (ContextCompat.CheckSelfPermission(this, global::Android.Manifest.Permission.AccessFineLocation)
+            != Permission.Granted)
+        {
+            return;   // 許可がなければ何もしない（クラッシュ防止）
+        }
+
+        _locationManager ??= (LocationManager?)GetSystemService(LocationService);
+        if (_locationManager is null) return;
+
+        var provider = _locationManager.IsProviderEnabled(LocationManager.GpsProvider)
+            ? LocationManager.GpsProvider
+            : LocationManager.NetworkProvider;
+
+        if (!_locationManager.IsProviderEnabled(provider)) return;
+
+        try
+        {
+            _locationManager.RequestSingleUpdate(
+                provider,
+                new SingleLocationListener(OnLocationReceived),
+                Looper.MainLooper);
+        }
+        catch (Exception ex)
+        {
+            global::Android.Util.Log.Error("TimerForegroundService", $"位置情報取得失敗: {ex}");
+        }
+    }
+
+    private void OnLocationReceived(global::Android.Locations.Location location)
+    {
+        LastLocation = location;
+        LocationChanged?.Invoke(location);
+        UpdateNotificationWithLocation(location);
+    }
+
+    private void UpdateNotificationWithLocation(global::Android.Locations.Location location)
+    {
+        var text = $"緯度:{location.Latitude:F5} 経度:{location.Longitude:F5}";
+
+        var notification = new NotificationCompat.Builder(this, ChannelId)
+            .SetContentTitle("タイマー動作中")
+            .SetContentText(text)
+            .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
+            .SetOngoing(true)
+            .Build();
+
+        NotificationManagerCompat.From(this).Notify(NotificationId, notification);
+    }
+
+    // 1回分の位置情報コールバックを受け取るための小さな内部クラス
+    private class SingleLocationListener : Java.Lang.Object, ILocationListener
+    {
+        private readonly Action<global::Android.Locations.Location> _onLocation;
+        public SingleLocationListener(Action<global::Android.Locations.Location> onLocation) => _onLocation = onLocation;
+
+        public void OnLocationChanged(global::Android.Locations.Location location) => _onLocation(location);
+        public void OnProviderDisabled(string provider) { }
+        public void OnProviderEnabled(string provider) { }
+        public void OnStatusChanged(string? provider, Availability status, Bundle? extras) { }
+    }
+
+    private void StartForegroundIfNeeded()
+    {
+        if (_isForegroundStarted) return;
+        StartForegroundNotification();
+        _isForegroundStarted = true;
+    }
+    private void StartLocationUpdates()
+    {
+        var intervalSeconds = Math.Max(5, EkimemoUtilities.Services.Settings.IntervalSeconds);
+        IsLocationRunning = true;
+
+        _locationTimer?.Dispose();
+        _locationTimer = new System.Threading.Timer(_ => FetchLocationOnce(), null, 0, intervalSeconds * 1000);
+    }
+
+    private void StopLocationUpdates()
+    {
+        _locationTimer?.Dispose();
+        _locationTimer = null;
+        IsLocationRunning = false;
+
+        MaybeStopServiceIfIdle();
+    }
+
 
     private void StartForegroundNotification()
     {
@@ -123,14 +242,31 @@ public class TimerForegroundService : Service
         _timer?.Dispose();
         _timer = null;
         IsRunning = false;
-        StopForeground(true);
-        StopSelf();
+
+        MaybeStopServiceIfIdle();
+    }
+
+    private void MaybeStopServiceIfIdle()
+    {
+        if (!IsRunning && !IsLocationRunning)
+        {
+            StopForeground(true);
+            _isForegroundStarted = false;
+            StopSelf();
+        }
     }
 
     public override void OnDestroy()
     {
         _timer?.Dispose();
+        _locationTimer?.Dispose();
         IsRunning = false;
+        IsLocationRunning = false;
         base.OnDestroy();
     }
+
+
+
+
+
 }
