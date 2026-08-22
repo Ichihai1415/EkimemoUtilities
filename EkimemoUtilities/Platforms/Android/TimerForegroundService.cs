@@ -185,8 +185,14 @@ public class TimerForegroundService : Service
     }
 
 
+    private long _startElapsedRealtimeMs;
+    private long _durationMs;
+
     private void StartCountdown(int seconds)
     {
+        _durationMs = seconds * 1000L;
+        _startElapsedRealtimeMs = SystemClock.ElapsedRealtime();
+
         _remainingSeconds = seconds;
         RemainingSeconds = _remainingSeconds;
         IsRunning = true;
@@ -196,13 +202,22 @@ public class TimerForegroundService : Service
         _timer = new System.Threading.Timer(OnTick, null, 1000, 1000);
     }
 
+
     private void OnTick(object? state)
     {
-        _remainingSeconds--;
-        RemainingSeconds = _remainingSeconds;
-        RemainingChanged?.Invoke(_remainingSeconds);
+        var elapsedMs = SystemClock.ElapsedRealtime() - _startElapsedRealtimeMs;
+        var remainingMs = _durationMs - elapsedMs;
+        var remainingSeconds = (int)Math.Ceiling(remainingMs / 1000.0);
+        if (remainingSeconds < 0) remainingSeconds = 0;
 
-        if (_remainingSeconds <= 0)
+        if (remainingSeconds != _remainingSeconds)
+        {
+            _remainingSeconds = remainingSeconds;
+            RemainingSeconds = _remainingSeconds;
+            RemainingChanged?.Invoke(_remainingSeconds);
+        }
+
+        if (remainingMs <= 0)
         {
             Vibrate();
             ShowCompletionNotification();
@@ -210,6 +225,7 @@ public class TimerForegroundService : Service
             StopTimer();
         }
     }
+
 
     private void Vibrate()
     {
@@ -329,4 +345,6 @@ public class TimerForegroundService : Service
 
         return PendingIntent.GetActivity(this, 0, launchIntent, flags);
     }
+
+
 }

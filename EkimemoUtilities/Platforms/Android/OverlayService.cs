@@ -1,5 +1,4 @@
-﻿using Android.App;
-using Android.Content;
+﻿using Android.Content;
 using Android.Graphics.Drawables;
 using Android.OS;
 using Android.Runtime;
@@ -99,7 +98,33 @@ public class OverlayService : IOverlayService
             threeLine.Gravity = global::Android.Views.GravityFlags.Left;
 
             threeLine.Click += (s, e) => OpenMainApp();
+            threeLine.Touch += (s, e) =>
+            {
+                if (_layoutParams is null || _windowManager is null || _overlayView is null)
+                    return;
 
+                switch (e.Event!.Action)
+                {
+                    case global::Android.Views.MotionEventActions.Down:
+                        _initialX = _layoutParams.X;
+                        _initialY = _layoutParams.Y;
+                        _initialTouchX = e.Event.RawX;
+                        _initialTouchY = e.Event.RawY;
+                        e.Handled = true;
+                        break;
+
+                    case global::Android.Views.MotionEventActions.Move:
+                        _layoutParams.X = _initialX + (int)(e.Event.RawX - _initialTouchX);
+                        _layoutParams.Y = _initialY - (int)(e.Event.RawY - _initialTouchY);
+                        _windowManager.UpdateViewLayout(_overlayView, _layoutParams);
+                        e.Handled = true;
+                        break;
+
+                    case global::Android.Views.MotionEventActions.Up:
+                        e.Handled = true;
+                        break;
+                }
+            };
 
             var dragHandle = new global::Android.Widget.TextView(themedContext)
             {
@@ -372,6 +397,11 @@ public class OverlayService : IOverlayService
             {
                 ShowOverlayNotification("チェックインしよう！", stationName + "駅エリアに入りました");
                 Vibrate();
+                if (_timerController.IsRunning)
+                {
+                    _timerController.Stop();
+                    _timeLabel?.Text = FormatTime(0);
+                }
             }
             lastStationName = stationName!;
         }
