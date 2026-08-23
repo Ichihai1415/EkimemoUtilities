@@ -25,7 +25,7 @@ public class TimerForegroundService : Service
     public const string ExtraDurationSeconds = "duration_seconds";
 
     private const int NotificationId = 1001;
-    private const string ChannelId = "timer_channel";
+    private const string ChannelId_timer = "timer_channel";
 
     private System.Threading.Timer? _timer;
     private int _remainingSeconds;
@@ -121,7 +121,7 @@ public class TimerForegroundService : Service
         return;
         var text = $"緯度:{location.Latitude:F5} 経度:{location.Longitude:F5}";
 
-        var notification = new NotificationCompat.Builder(this, ChannelId)
+        var notification = new NotificationCompat.Builder(this, ChannelId_timer)
             .SetContentTitle("タイマー動作中")
             .SetContentText(text)
             .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
@@ -173,12 +173,19 @@ public class TimerForegroundService : Service
     {
         EnsureChannels();
 
-        var notification = new NotificationCompat.Builder(this, ChannelId)
-            .SetContentTitle("稼働中")
-            .SetContentText("Ekimemo Utilities: Foreground Service is running.")
-            .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo) // 暫定アイコン
-            .SetOngoing(true)
-            .SetContentIntent(CreateOpenAppPendingIntent())
+        if (Settings.NotificationEnabled)//if (OperatingSystem.IsAndroidVersionAtLeast(33))
+        {
+            var status_not = Permissions.CheckStatusAsync<Platforms.Android.PostNotificationsPermission>().Result;
+            if (status_not != PermissionStatus.Granted)
+                _ = Permissions.RequestAsync<Platforms.Android.PostNotificationsPermission>().Result;
+        }
+
+        var notification = new NotificationCompat.Builder(this, ChannelId_timer)
+            .SetContentTitle("稼働中")?
+            .SetContentText("Ekimemo Utilities: Foreground Service is running.")?
+            .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)?
+            .SetOngoing(true)?
+            .SetContentIntent(CreateOpenAppPendingIntent())?
             .Build();
 
         StartForeground(NotificationId, notification);
@@ -277,28 +284,34 @@ public class TimerForegroundService : Service
         base.OnDestroy();
     }
 
-    private const string ChannelIdCompletion = "timer_completion_channel";
-    private const int CompletionNotificationId = 1002;
+    private const string ChannelId_TimerCompletion = "timer_completion_channel";
+    private const int NotificationId_TimerCompletion = 1002;
     private void ShowCompletionNotification()
+    {
+        ShowNotification(ChannelId_TimerCompletion, NotificationId_TimerCompletion, "タイマー終了", "設定した時間が経過しました", global::Android.Resource.Drawable.IcLockIdleAlarm);
+    }
+
+
+    internal void ShowNotification(string channelId, int notifyId, string title, string text, int icon)
     {
         if (Settings.NotificationEnabled)
         {
-            var notification = new NotificationCompat.Builder(this, ChannelIdCompletion)
-                .SetContentTitle("タイマー終了")
-                .SetContentText("設定した時間が経過しました")
-                .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
-                .SetAutoCancel(true)
-                .SetContentIntent(CreateOpenAppPendingIntent())
+            var notification = new NotificationCompat.Builder(this, channelId)
+                .SetContentTitle(title)?
+                .SetContentText(text)?
+                .SetSmallIcon(icon)?
+                .SetAutoCancel(true)?
+                .SetContentIntent(CreateOpenAppPendingIntent())?
                 .Build();
 
-            NotificationManagerCompat.From(this).Notify(CompletionNotificationId, notification);
+            NotificationManagerCompat.From(this)?.Notify(notifyId, notification);
         }
     }
 
-    private const string ChannelIdTimer = "timer_channel";
+    private const string ChannelId_Timer = "timer_channel";
 
-    internal const int NotificationStationId = 1003;
-    internal const string ChannelIdStation = "station_channel";
+    internal const int NotificationId_Station = 1003;
+    internal const string ChannelId_Station = "station_channel";
 
     private void EnsureChannels()
     {
@@ -307,34 +320,33 @@ public class TimerForegroundService : Service
         var manager = (NotificationManager?)GetSystemService(NotificationService);
         if (manager is null) return;
 
-        if (manager.GetNotificationChannel(ChannelIdTimer) == null)
+        if (manager.GetNotificationChannel(ChannelId_Timer) == null)
         {
             var timerChannel = new NotificationChannel(
-                ChannelIdTimer, "サービス動作中通知", NotificationImportance.Min);
+                ChannelId_Timer, "サービス動作中通知", NotificationImportance.Min);
             manager.CreateNotificationChannel(timerChannel);
         }
 
-        if (manager.GetNotificationChannel(ChannelIdCompletion) == null)
+        if (manager.GetNotificationChannel(ChannelId_TimerCompletion) == null)
         {
             var completionChannel = new NotificationChannel(
-                ChannelIdCompletion, "タイマー終了通知", NotificationImportance.Default);
+                ChannelId_TimerCompletion, "タイマー終了通知", NotificationImportance.Default);
             manager.CreateNotificationChannel(completionChannel);
         }
 
-
-        if (manager.GetNotificationChannel(ChannelIdStation) == null)
+        if (manager.GetNotificationChannel(ChannelId_Station) == null)
         {
             var stationChannel = new NotificationChannel(
-                ChannelIdStation, "駅変化通知", NotificationImportance.Default);
+                ChannelId_Station, "駅変化通知", NotificationImportance.Default);
             manager.CreateNotificationChannel(stationChannel);
         }
     }
 
 
 
-    internal PendingIntent? CreateOpenAppPendingIntent()
+    internal PendingIntent? CreateOpenAppPendingIntent(string? packageName = null)
     {
-        var launchIntent = PackageManager?.GetLaunchIntentForPackage(PackageName!);
+        var launchIntent = PackageManager?.GetLaunchIntentForPackage(packageName ?? PackageName!);
         if (launchIntent is null) return null;
 
         launchIntent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ReorderToFront);

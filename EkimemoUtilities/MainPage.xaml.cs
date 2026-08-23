@@ -4,8 +4,6 @@ namespace EkimemoUtilities
 {
     public partial class MainPage : ContentPage
     {
-        int count = 0;
-
         private readonly IOverlayService _overlayService;
 
         private readonly ITimerController _timerController;
@@ -27,17 +25,23 @@ namespace EkimemoUtilities
             }
             else
             {
-                var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
-                if (status != PermissionStatus.Granted)
-                {
-                    status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
-                }
-                if (status != PermissionStatus.Granted)
+                var status_loc = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+                if (status_loc != PermissionStatus.Granted)
+                    status_loc = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                if (status_loc != PermissionStatus.Granted)
                 {
                     await DisplayAlertAsync("権限が必要です", "位置情報の許可が必要です。", "OK");
                     return;
                 }
+
                 _locationTracker.Start();
+
+                if (Settings.NotificationEnabled)//if (OperatingSystem.IsAndroidVersionAtLeast(33))
+                {
+                    var status_not = await Permissions.CheckStatusAsync<Platforms.Android.PostNotificationsPermission>();
+                    if (status_not != PermissionStatus.Granted)
+                        _ = await Permissions.RequestAsync<Platforms.Android.PostNotificationsPermission>();
+                }
             }
             ToggleLocationButton.Text = !_locationTracker.IsRunning ? "Stop Getting Location" : "Start Getting Location";
             ToggleLocationButton.BackgroundColor = !_locationTracker.IsRunning ? Color.FromArgb("#2B0B98") : Color.FromArgb("#512BD4");
@@ -47,7 +51,6 @@ namespace EkimemoUtilities
         {
             base.OnAppearing();
 
-            // 画面表示のたびに、保存済みの設定をUIに反映する
             var secondsDS = Settings.DurationSeconds;
             DurationStepper.Value = secondsDS;
             DurationLabel.Text = secondsDS.ToString();
@@ -72,8 +75,6 @@ namespace EkimemoUtilities
             var seconds = (int)e.NewValue;
             DurationLabel.Text = seconds.ToString();
             Settings.DurationSeconds = seconds;
-
-
         }
 
         private void OnIntervalChanged(object sender, ValueChangedEventArgs e)
@@ -92,24 +93,8 @@ namespace EkimemoUtilities
 
         private async void OnStartClicked(object sender, EventArgs e)
         {
-            var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
-            if (status != PermissionStatus.Granted)
-            {
-                status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
-            }
-            if (status != PermissionStatus.Granted)
-            {
-                await DisplayAlertAsync("権限が必要です", "位置情報の許可が必要です。", "OK");
-                return;
-            }
-
-#if ANDROID
             if (OperatingSystem.IsAndroidVersionAtLeast(33))
-            {
                 await Permissions.RequestAsync<Platforms.Android.PostNotificationsPermission>();
-            }
-#endif
-
             _timerController.Start(TimeSpan.FromSeconds(Settings.DurationSeconds));
         }
 
@@ -118,9 +103,25 @@ namespace EkimemoUtilities
             Settings.VibrationEnabled = e.Value;
         }
 
-        private void OnNotificationCheckBoxChanged(object sender, CheckedChangedEventArgs e)
+        private async void OnNotificationCheckBoxChanged(object sender, CheckedChangedEventArgs e)
         {
             Settings.NotificationEnabled = e.Value;
+            if (e.Value)//if (OperatingSystem.IsAndroidVersionAtLeast(33))
+            {
+                var status_not = await Permissions.CheckStatusAsync<Platforms.Android.PostNotificationsPermission>();
+                if (status_not != PermissionStatus.Granted)
+                    _ = await Permissions.RequestAsync<Platforms.Android.PostNotificationsPermission>();
+            }
+        }
+
+        private void OnHideLocationCheckBoxChanged(object sender, CheckedChangedEventArgs e)
+        {
+            Settings.HideLocationEnabled = e.Value;
+        }
+
+        private void OnHideTimerCheckBoxChanged(object sender, CheckedChangedEventArgs e)
+        {
+            Settings.HideTimerEnabled = e.Value;
         }
     }
 }

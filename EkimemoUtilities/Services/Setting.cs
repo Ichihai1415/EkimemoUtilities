@@ -31,4 +31,16 @@ public static class Settings
         get => Preferences.Get("notification_enabled", true);
         set => Preferences.Set("notification_enabled", value);
     }
+
+    public static bool HideLocationEnabled
+    {
+        get => Preferences.Get("hide_location_enabled", false);
+        set => Preferences.Set("hide_location_enabled", value);
+    }
+
+    public static bool HideTimerEnabled
+    {
+        get => Preferences.Get("hide_timer_enabled", false);
+        set => Preferences.Set("hide_timer_enabled", value);
+    }
 }

@@ -1,4 +1,6 @@
-﻿using Android.Content;
+﻿using Android.App;
+using Android.Content;
+using Android.Content.PM;
 using Android.Graphics.Drawables;
 using Android.OS;
 using Android.Runtime;
@@ -101,33 +103,8 @@ public class OverlayService : IOverlayService
             threeLine.Gravity = global::Android.Views.GravityFlags.Left;
 
             //threeLine.Click += (s, e) => OpenMainApp();
-            threeLine.Touch += (s, e) =>
-            {
-                if (_layoutParams is null || _windowManager is null || _overlayView is null)
-                    return;
+            threeLine.Touch += Move;
 
-                switch (e.Event!.Action)
-                {
-                    case global::Android.Views.MotionEventActions.Down:
-                        _initialX = _layoutParams.X;
-                        _initialY = _layoutParams.Y;
-                        _initialTouchX = e.Event.RawX;
-                        _initialTouchY = e.Event.RawY;
-                        e.Handled = true;
-                        break;
-
-                    case global::Android.Views.MotionEventActions.Move:
-                        _layoutParams.X = _initialX + (int)(e.Event.RawX - _initialTouchX);
-                        _layoutParams.Y = _initialY - (int)(e.Event.RawY - _initialTouchY);
-                        _windowManager.UpdateViewLayout(_overlayView, _layoutParams);
-                        e.Handled = true;
-                        break;
-
-                    case global::Android.Views.MotionEventActions.Up:
-                        e.Handled = true;
-                        break;
-                }
-            };
 
             var dragHandle = new global::Android.Widget.TextView(themedContext)
             {
@@ -263,9 +240,9 @@ public class OverlayService : IOverlayService
                 global::Android.Views.WindowManagerFlags.NotFocusable | WindowManagerFlags.LayoutNoLimits,
                 global::Android.Graphics.Format.Translucent)
             {
-                Gravity = global::Android.Views.GravityFlags.Bottom | global::Android.Views.GravityFlags.Left,
+                Gravity = global::Android.Views.GravityFlags.Top | global::Android.Views.GravityFlags.Left,
                 X = 100,
-                Y = 300
+                Y = 100
             };
             _layoutParams = layoutParams;
             _windowManager?.AddView(_overlayView, layoutParams);
@@ -284,6 +261,34 @@ public class OverlayService : IOverlayService
         catch (Exception ex)
         {
             global::Android.Util.Log.Error("OverlayService", $"Display failed: {ex}");
+        }
+    }
+
+    private void Move(object? s, global::Android.Views.View.TouchEventArgs e)
+    {
+        if (_layoutParams is null || _windowManager is null || _overlayView is null)
+            return;
+
+        switch (e.Event!.Action)
+        {
+            case global::Android.Views.MotionEventActions.Down:
+                _initialX = _layoutParams.X;
+                _initialY = _layoutParams.Y;
+                _initialTouchX = e.Event.RawX;
+                _initialTouchY = e.Event.RawY;
+                e.Handled = true;
+                break;
+
+            case global::Android.Views.MotionEventActions.Move:
+                _layoutParams.X = _initialX + (int)(e.Event.RawX - _initialTouchX);
+                _layoutParams.Y = _initialY + (int)(e.Event.RawY - _initialTouchY);
+                _windowManager.UpdateViewLayout(_overlayView, _layoutParams);
+                e.Handled = true;
+                break;
+
+            case global::Android.Views.MotionEventActions.Up:
+                e.Handled = true;
+                break;
         }
     }
 
@@ -371,9 +376,14 @@ public class OverlayService : IOverlayService
         var stationName = MauiProgram.geojson.FindName(info.Value.Latitude, info.Value.Longitude);
         if (stationName != null)
         {
+            //debug
+            //ShowNotification_Station("チェックインしよう！", stationName + "駅エリアに入りました");
+
             if (lastStationName != "" && lastStationName != stationName)
             {
-                ShowOverlayNotification("チェックインしよう！", stationName + "駅エリアに入りました");
+                ShowNotification_Station("チェックインしよう！", stationName + "駅エリアに入りました。ここをタップで駅メモを開きます。");
+                //ShowNotification(TimerForegroundService.ChannelId_Station, TimerForegroundService.NotificationId_Station, "チェックインしよう！", stationName + "駅エリアに入りました", global::Android.Resource.Drawable.IcDialogInfo);
+
                 Vibrate();
                 if (_timerController.IsRunning)
                 {
@@ -423,28 +433,49 @@ public class OverlayService : IOverlayService
         context.StartActivity(launchIntent);
     }
 
-    private void ShowOverlayNotification(string title, string text)
+    private void ShowNotification_Station(string title, string text)
     {
         if (Settings.NotificationEnabled)
         {
             var context = global::Android.App.Application.Context;
 
-            var notification = new NotificationCompat.Builder(context, TimerForegroundService.ChannelIdStation)
-                .SetContentTitle(title)
-                .SetContentText(text)
-                .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
-                .SetAutoCancel(true)
+            var notification = new NotificationCompat.Builder(context, TimerForegroundService.ChannelId_Station)
+                .SetContentTitle(title)?
+                .SetContentText(text)?
+                .SetSmallIcon(global::Android.Resource.Drawable.IcDialogMap)?
+                .SetContentIntent(CreateOpenAppPendingIntent("jp.mfapps.loc.ekimemo"))?
+                .SetAutoCancel(true)?
                 .Build();
 
-            NotificationManagerCompat.From(context).Notify(TimerForegroundService.NotificationStationId, notification);
+            NotificationManagerCompat.From(context)?.Notify(TimerForegroundService.NotificationId_Station, notification);
         }
     }
+
+
+    internal PendingIntent? CreateOpenAppPendingIntent(string packageName)
+    {
+        var context = global::Android.App.Application.Context;
+        var packageManager = context.PackageManager;
+
+        var launchIntent = packageManager?.GetLaunchIntentForPackage(packageName);
+        if (launchIntent is null) return null;
+
+        launchIntent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ReorderToFront);
+
+        var flags = Build.VERSION.SdkInt >= BuildVersionCodes.S
+            ? PendingIntentFlags.Immutable
+            : PendingIntentFlags.UpdateCurrent;
+
+        return PendingIntent.GetActivity(context, 0, launchIntent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+    }
+
+
 
     private bool _isMinimized = false;
     private void ToggleMinView()
     {
         _div?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
-        _stationLabel?.Visibility = _isMinimized ? (_stationLabel?.Text == "" ? ViewStates.Gone : ViewStates.Visible) : ViewStates.Gone;
+        _stationLabel?.Visibility = _isMinimized && _stationLabel?.Text != "" ? ViewStates.Visible : ViewStates.Gone;
         _locationLabel?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
         _div2?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
         _timeLabel?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;

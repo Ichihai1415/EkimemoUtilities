@@ -3,6 +3,9 @@
 	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:supportsRtl="true" android:label="駅メモUtil">
 		<service android:name=".TimerForegroundService" android:foregroundServiceType="location" android:exported="false" />
 	</application>
+	<queries>
+		<package android:name="jp.mfapps.loc.ekimemo" />
+	</queries>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
