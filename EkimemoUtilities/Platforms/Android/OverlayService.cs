@@ -98,31 +98,61 @@ public class OverlayService : IOverlayService
 
             var threeLine = new global::Android.Widget.TextView(themedContext)
             {
-                Text = "≡ ",
+                Text = "≡",
                 TextSize = 20
             };
-
-
             threeLine.SetTextColor(global::Android.Graphics.Color.White);
             threeLine.Gravity = global::Android.Views.GravityFlags.Left;
+            //threeLine.Click += (s, e) => OpenApp();
+            //threeLine.LongClick += (s, e) => OpenApp(PackageName_Ekimemo);
+            //threeLine.Touch += Move;
+            headRow.AddView(threeLine);
 
-            //threeLine.Click += (s, e) => OpenMainApp();
-            threeLine.Touch += Move;
 
-
-            var dragHandle = new global::Android.Widget.TextView(themedContext)
+            var div_v1 = new global::Android.Widget.TextView(themedContext)
             {
-                Text = "駅メモUtilities",
+                Text = " | ",
                 TextSize = 20
             };
-            dragHandle.SetTextColor(global::Android.Graphics.Color.LightGray);
-            dragHandle.Gravity = global::Android.Views.GravityFlags.Left;
+            div_v1.SetTextColor(global::Android.Graphics.Color.Argb(127, 127, 127, 127));
+            div_v1.Gravity = global::Android.Views.GravityFlags.Left;
+            headRow.AddView(div_v1);
 
-            dragHandle.Click += (s, e) => ToggleMinView();
-            dragHandle.LongClick += (s, e) => OpenMainApp();
 
-            headRow.AddView(threeLine);
-            headRow.AddView(dragHandle);
+            var openApp = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = "↗",
+                TextSize = 20
+            };
+            openApp.SetTextColor(global::Android.Graphics.Color.White);
+            openApp.Gravity = global::Android.Views.GravityFlags.Left;
+            openApp.Click += (s, e) => OpenApp();
+            openApp.LongClick += (s, e) => OpenApp(PackageName_Ekimemo);
+            headRow.AddView(openApp);
+
+
+            var div_v2 = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = " | ",
+                TextSize = 20
+            };
+            div_v2.SetTextColor(global::Android.Graphics.Color.Argb(127, 127, 127, 127));
+            div_v2.Gravity = global::Android.Views.GravityFlags.Left;
+            headRow.AddView(div_v2);
+
+
+            var head = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = "駅メモUtilities",
+                TextSize = 16
+            };
+            head.SetTextColor(global::Android.Graphics.Color.LightGray);
+            head.Gravity = global::Android.Views.GravityFlags.Bottom;
+            head.Click += (s, e) => ToggleMinView();
+
+
+
+            headRow.AddView(head);
             container.AddView(headRow);
 
             /*
@@ -140,7 +170,7 @@ public class OverlayService : IOverlayService
                 Text = "----------------------------------------",
                 TextSize = 10
             };
-            _div.SetTextColor(global::Android.Graphics.Color.LightGray);
+            _div.SetTextColor(global::Android.Graphics.Color.Gray);
             _div.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
 
             container.AddView(_div);
@@ -173,7 +203,7 @@ public class OverlayService : IOverlayService
                 Text = "----------------------------------------",
                 TextSize = 10
             };
-            _div2.SetTextColor(global::Android.Graphics.Color.LightGray);
+            _div2.SetTextColor(global::Android.Graphics.Color.Gray);
             _div2.Gravity = global::Android.Views.GravityFlags.CenterHorizontal;
 
             container.AddView(_div2);
@@ -219,6 +249,8 @@ public class OverlayService : IOverlayService
 
             container.AddView(_timeLabel);
             container.AddView(_buttonRow);
+
+            container.Touch += Move;
 
             //var openAppButton = new global::Android.Widget.Button(themedContext) { Text = "Open Application", TextSize = 12 };
             //openAppButton.Click += (s, e) => OpenMainApp();
@@ -418,12 +450,16 @@ public class OverlayService : IOverlayService
             }
         }
     }
-    private void OpenMainApp()
+    public const string PackageName_Ekimemo = "jp.mfapps.loc.ekimemo";
+
+    private void OpenApp(string? packageName = null)
     {
         var context = global::Android.App.Application.Context;
         var packageManager = context.PackageManager;
 
-        var launchIntent = packageManager?.GetLaunchIntentForPackage(context.PackageName!);
+        packageName ??= context.PackageName;
+
+        var launchIntent = packageManager?.GetLaunchIntentForPackage(packageName!);
         if (launchIntent is null)
         {
             global::Android.Util.Log.Error("OverlayService", "起動用Intentの取得に失敗");
@@ -444,7 +480,7 @@ public class OverlayService : IOverlayService
                 .SetContentTitle(title)?
                 .SetContentText(text)?
                 .SetSmallIcon(global::Android.Resource.Drawable.IcDialogMap)?
-                .SetContentIntent(CreateOpenAppPendingIntent("jp.mfapps.loc.ekimemo"))?
+                .SetContentIntent(CreateOpenAppPendingIntent(PackageName_Ekimemo))?
                 .SetAutoCancel(true)?
                 .Build();
 
