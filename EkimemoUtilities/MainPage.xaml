@@ -62,32 +62,46 @@
                         ValueChanged="OnIntervalChanged" />
                 </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="4">
+                <HorizontalStackLayout>
                     <CheckBox Margin="-10,10,0,-10" x:Name="VibrationCheckBox" IsChecked="True" CheckedChanged="OnVibrationCheckBoxChanged"/>
-                    <Label Margin="0,22,0,-10" Text="Enable Vibration" />
+                    <Label Margin="0,22,0,-10" Text="Enable Vibration">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnVibrationLabelTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
                 </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="4">
+                <HorizontalStackLayout>
                     <CheckBox Margin="-10,0,0,0"  x:Name="NotificationCheckBox" IsChecked="True" CheckedChanged="OnNotificationCheckBoxChanged"/>
-                    <Label Margin="0,12,0,0" Text="Enable Notification" />
+                    <Label Margin="0,12,0,0" Text="Enable Notification">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnNotificationLabelTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
                 </HorizontalStackLayout>
 
 
-                <HorizontalStackLayout Spacing="4">
-                    <CheckBox Margin="-10,0,0,0"  x:Name="HideLocationCheckBox" IsChecked="False" CheckedChanged="OnHideLocationCheckBoxChanged"/>
-                    <Label Margin="0,12,0,0" Text="Hide Location (overlay)" />
+                <HorizontalStackLayout>
+                    <CheckBox Margin="-10,10,0,-10"  x:Name="HideLocationCheckBox" IsChecked="False" CheckedChanged="OnHideLocationCheckBoxChanged"/>
+                    <Label Margin="0,22,0,-10" Text="Hide Location (overlay)">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHideLocationLabelTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
                 </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="4">
+                <HorizontalStackLayout>
                     <CheckBox Margin="-10,0,0,0"  x:Name="HideTimerCheckBox" IsChecked="False" CheckedChanged="OnHideTimerCheckBoxChanged"/>
-                    <Label Margin="0,12,0,0" Text="Hide Timer (overlay)" />
+                    <Label Margin="0,12,0,0" Text="Hide Timer (overlay)">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHideTimerLabelTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
                 </HorizontalStackLayout>
 
             </VerticalStackLayout>
 
-
         </VerticalStackLayout>
 
     </ScrollView>
-
 </ContentPage>

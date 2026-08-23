@@ -203,12 +203,28 @@ public class TimerForegroundService : Service
         _remainingSeconds = seconds;
         RemainingSeconds = _remainingSeconds;
         IsRunning = true;
-        RemainingChanged?.Invoke(_remainingSeconds);
 
-        _timer?.Dispose();
-        _timer = new System.Threading.Timer(OnTick, null, 1000, 1000);
+        RemainingChanged?.Invoke(_remainingSeconds);
+        ScheduleNextTick();
     }
 
+    private void ScheduleNextTick()
+    {
+        var elapsedMs = SystemClock.ElapsedRealtime() - _startElapsedRealtimeMs;
+        var remainingMs = _durationMs - elapsedMs;
+
+        if (remainingMs <= 0)
+        {
+            OnTick(null);
+            return;
+        }
+
+        var msUntilNextSecond = remainingMs % 1000;
+        if (msUntilNextSecond == 0) msUntilNextSecond = 1000;
+
+        _timer?.Dispose();
+        _timer = new System.Threading.Timer(OnTick, null, msUntilNextSecond, System.Threading.Timeout.Infinite);
+    }
 
     private void OnTick(object? state)
     {
@@ -230,9 +246,11 @@ public class TimerForegroundService : Service
             ShowCompletionNotification();
             Completed?.Invoke();
             StopTimer();
+            return;
         }
-    }
 
+        ScheduleNextTick();
+    }
 
     private void Vibrate()
     {

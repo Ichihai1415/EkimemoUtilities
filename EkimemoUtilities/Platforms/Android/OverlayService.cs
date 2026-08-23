@@ -1,6 +1,5 @@
 ﻿using Android.App;
 using Android.Content;
-using Android.Content.PM;
 using Android.Graphics.Drawables;
 using Android.OS;
 using Android.Runtime;
@@ -53,7 +52,12 @@ public class OverlayService : IOverlayService
 
     public void Show()
     {
-        if (IsShowing) return;
+        if (IsShowing)
+        {
+            VisibilityUpdate();
+            return;
+        }
+
 
         if (!HasPermission())
         {
@@ -149,10 +153,7 @@ public class OverlayService : IOverlayService
             };
             _stationLabel.SetTextColor(global::Android.Graphics.Color.White);
             _stationLabel.Gravity = GravityFlags.CenterHorizontal;
-            if (_stationLabel.Text == "" || _isMinimized)
-                _stationLabel.Visibility = ViewStates.Gone;
-            else
-                _stationLabel.Visibility = ViewStates.Visible;
+
             container.AddView(_stationLabel);
 
 
@@ -228,6 +229,9 @@ public class OverlayService : IOverlayService
 
 
             _overlayView = container;
+
+            VisibilityUpdate();
+
 
             var overlayType = Build.VERSION.SdkInt >= BuildVersionCodes.O
                 ? global::Android.Views.WindowManagerTypes.ApplicationOverlay
@@ -340,10 +344,7 @@ public class OverlayService : IOverlayService
     {
         _locationLabel?.Text = FormatLocation(location);
         _stationLabel?.Text = GetStation(location);
-        if (_stationLabel?.Text == "" || _isMinimized)
-            _stationLabel?.Visibility = ViewStates.Gone;
-        else
-            _stationLabel?.Visibility = ViewStates.Visible;
+        VisibilityUpdate();
     }
 
     private string FormatLocation(LocationInfo? info)
@@ -469,19 +470,22 @@ public class OverlayService : IOverlayService
         return PendingIntent.GetActivity(context, 0, launchIntent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
     }
 
-
-
     private bool _isMinimized = false;
     private void ToggleMinView()
     {
-        _div?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
-        _stationLabel?.Visibility = _isMinimized && _stationLabel?.Text != "" ? ViewStates.Visible : ViewStates.Gone;
-        _locationLabel?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
-        _div2?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
-        _timeLabel?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
-        _buttonRow?.Visibility = _isMinimized ? ViewStates.Visible : ViewStates.Gone;
-
         _isMinimized = !_isMinimized;
+        VisibilityUpdate();
+    }
+
+    internal void VisibilityUpdate()
+    {
+        _div?.Visibility = _isMinimized || Settings.HideLocationEnabled ? ViewStates.Gone : ViewStates.Visible;
+        _stationLabel?.Visibility = _isMinimized || Settings.HideLocationEnabled || _stationLabel?.Text == "" ? ViewStates.Gone : ViewStates.Visible;
+        _locationLabel?.Visibility = _isMinimized || Settings.HideLocationEnabled ? ViewStates.Gone : ViewStates.Visible;
+
+        _div2?.Visibility = _isMinimized || Settings.HideTimerEnabled ? ViewStates.Gone : ViewStates.Visible;
+        _timeLabel?.Visibility = _isMinimized || Settings.HideTimerEnabled ? ViewStates.Gone : ViewStates.Visible;
+        _buttonRow?.Visibility = _isMinimized || Settings.HideTimerEnabled ? ViewStates.Gone : ViewStates.Visible;
     }
 
 }

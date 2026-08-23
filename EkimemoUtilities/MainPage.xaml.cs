@@ -67,6 +67,8 @@ namespace EkimemoUtilities
 
             VibrationCheckBox.IsChecked = Settings.VibrationEnabled;
             NotificationCheckBox.IsChecked = Settings.NotificationEnabled;
+            HideLocationCheckBox.IsChecked = Settings.HideLocationEnabled;
+            HideTimerCheckBox.IsChecked = Settings.HideTimerEnabled;
 
         }
 
@@ -117,11 +119,35 @@ namespace EkimemoUtilities
         private void OnHideLocationCheckBoxChanged(object sender, CheckedChangedEventArgs e)
         {
             Settings.HideLocationEnabled = e.Value;
+            if (_overlayService.IsShowing)
+                _overlayService.Show();
         }
 
         private void OnHideTimerCheckBoxChanged(object sender, CheckedChangedEventArgs e)
         {
             Settings.HideTimerEnabled = e.Value;
+            if (_overlayService.IsShowing)
+                _overlayService.Show();
+        }
+
+        private void OnVibrationLabelTapped(object sender, TappedEventArgs e)
+        {
+            VibrationCheckBox.IsChecked = !VibrationCheckBox.IsChecked;
+        }
+
+        private void OnNotificationLabelTapped(object sender, TappedEventArgs e)
+        {
+            NotificationCheckBox.IsChecked = !NotificationCheckBox.IsChecked;
+        }
+
+        private void OnHideLocationLabelTapped(object sender, TappedEventArgs e)
+        {
+            HideLocationCheckBox.IsChecked = !HideLocationCheckBox.IsChecked;
+        }
+
+        private void OnHideTimerLabelTapped(object sender, TappedEventArgs e)
+        {
+            HideTimerCheckBox.IsChecked = !HideTimerCheckBox.IsChecked;
         }
     }
 }
