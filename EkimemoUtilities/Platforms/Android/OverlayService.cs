@@ -95,11 +95,11 @@ public class OverlayService : IOverlayService
             {
                 Orientation = global::Android.Widget.Orientation.Horizontal
             };
-
+            /*
             var threeLine = new global::Android.Widget.TextView(themedContext)
             {
                 Text = "≡",
-                TextSize = 20
+                TextSize = 18
             };
             threeLine.SetTextColor(global::Android.Graphics.Color.White);
             threeLine.Gravity = global::Android.Views.GravityFlags.Left;
@@ -107,52 +107,65 @@ public class OverlayService : IOverlayService
             //threeLine.LongClick += (s, e) => OpenApp(PackageName_Ekimemo);
             //threeLine.Touch += Move;
             headRow.AddView(threeLine);
+            */
+
+
+            var head = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = "EkimemoUtilities",
+                TextSize = 14
+            };
+            head.SetTextColor(global::Android.Graphics.Color.LightGray);
+            head.Gravity = global::Android.Views.GravityFlags.Bottom;
+            //head.Click += (s, e) => ToggleMinView();
+            headRow.AddView(head);
+
+
+            var div_v2 = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = " | ",
+                TextSize = 18
+            };
+            div_v2.SetTextColor(global::Android.Graphics.Color.Argb(127, 127, 127, 127));
+            div_v2.Gravity = global::Android.Views.GravityFlags.Right;
+            headRow.AddView(div_v2);
+
+
+
+            var oneLine = new global::Android.Widget.TextView(themedContext)
+            {
+                Text = "＿",
+                TextSize = 18
+            };
+            oneLine.SetTextColor(global::Android.Graphics.Color.White);
+            oneLine.Gravity = global::Android.Views.GravityFlags.Right;
+            oneLine.Click += (s, e) => ToggleMinView();
+            headRow.AddView(oneLine);
 
 
             var div_v1 = new global::Android.Widget.TextView(themedContext)
             {
                 Text = " | ",
-                TextSize = 20
+                TextSize = 18
             };
             div_v1.SetTextColor(global::Android.Graphics.Color.Argb(127, 127, 127, 127));
-            div_v1.Gravity = global::Android.Views.GravityFlags.Left;
+            div_v1.Gravity = global::Android.Views.GravityFlags.Right;
             headRow.AddView(div_v1);
 
 
             var openApp = new global::Android.Widget.TextView(themedContext)
             {
                 Text = "↗",
-                TextSize = 20
+                TextSize = 18
             };
             openApp.SetTextColor(global::Android.Graphics.Color.White);
-            openApp.Gravity = global::Android.Views.GravityFlags.Left;
+            openApp.Gravity = global::Android.Views.GravityFlags.Right;
             openApp.Click += (s, e) => OpenApp();
             openApp.LongClick += (s, e) => OpenApp(PackageName_Ekimemo);
             headRow.AddView(openApp);
 
 
-            var div_v2 = new global::Android.Widget.TextView(themedContext)
-            {
-                Text = " | ",
-                TextSize = 20
-            };
-            div_v2.SetTextColor(global::Android.Graphics.Color.Argb(127, 127, 127, 127));
-            div_v2.Gravity = global::Android.Views.GravityFlags.Left;
-            headRow.AddView(div_v2);
 
-
-            var head = new global::Android.Widget.TextView(themedContext)
-            {
-                Text = "駅メモUtilities",
-                TextSize = 16
-            };
-            head.SetTextColor(global::Android.Graphics.Color.LightGray);
-            head.Gravity = global::Android.Views.GravityFlags.Bottom;
-            head.Click += (s, e) => ToggleMinView();
-
-
-
-            headRow.AddView(head);
             container.AddView(headRow);
 
             /*

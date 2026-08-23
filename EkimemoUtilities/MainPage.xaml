@@ -8,7 +8,7 @@
             Padding="30,0"
             Spacing="15">
             <Label
-                Text="駅メモUtilities"
+                Text="EkimemoUtilities"
                 Style="{StaticResource Headline}"
                 SemanticProperties.HeadingLevel="Level1" />
 

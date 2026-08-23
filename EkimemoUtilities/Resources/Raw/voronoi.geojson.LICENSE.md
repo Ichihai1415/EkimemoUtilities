@@ -1,0 +1,1 @@
+voronoi.geojson は [Seo-4d696b75 / station_database](https://github.com/Seo-4d696b75/station_database) のデータを [EkimemoDB2Voronoi](https://github.com/Ichihai1415/EkimemoDB2Voronoi) で変換したものです。ライセンスは、[クリエイティブ・コモンズ 表示 4.0 国際 ライセンス](http://creativecommons.org/licenses/by/4.0/) です。
