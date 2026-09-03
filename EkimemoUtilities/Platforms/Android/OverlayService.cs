@@ -165,8 +165,8 @@ public class OverlayService : IOverlayService
             };
             openApp.SetTextColor(global::Android.Graphics.Color.White);
             openApp.Gravity = global::Android.Views.GravityFlags.Right;
-            openApp.Click += (s, e) => OpenApp();
-            openApp.LongClick += (s, e) => OpenApp(PackageName_Ekimemo);
+            openApp.Click += (s, e) => OpenApp(PackageName_Ekimemo);
+            openApp.LongClick += (s, e) => OpenApp();
             headRow.AddView(openApp);
 
 
