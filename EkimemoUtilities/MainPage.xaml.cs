@@ -59,6 +59,10 @@ namespace EkimemoUtilities
             IntervalStepper.Value = secondsI;
             IntervalLabel.Text = secondsI.ToString();
 
+            var gpsWait100ms = Settings.GPSWaitSeconds;
+            GPSWaitStepper.Value = gpsWait100ms;
+            GPSWaitLabel.Text = gpsWait100ms.ToString("0.0");
+
             _overlayService.Show();
             ToggleOverlayButton.Text = _overlayService.IsShowing ? "Hide Overlay" : "Show Overlay";
             ToggleOverlayButton.BackgroundColor = _overlayService.IsShowing ? Color.FromArgb("#2B0B98") : Color.FromArgb("#512BD4");
@@ -84,6 +88,13 @@ namespace EkimemoUtilities
             var seconds = (int)e.NewValue;
             IntervalLabel.Text = seconds.ToString();
             Settings.IntervalSeconds = seconds;
+        }
+
+        private void OnGPSWaitChanged(object sender, ValueChangedEventArgs e)
+        {
+            var value = (double)e.NewValue;
+            GPSWaitLabel.Text = value.ToString("0.0");
+            Settings.GPSWaitSeconds = value;
         }
 
         private void OnToggleOverlayClicked(object sender, EventArgs e)

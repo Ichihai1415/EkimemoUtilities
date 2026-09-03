@@ -78,36 +78,83 @@ public class TimerForegroundService : Service
 
 
 
-
-    private void FetchLocationOnce()
+    private System.Threading.Timer? _locationFallbackTimer;
+    private bool _locationReceivedThisCycle;
+    private void FetchLocationOnce(bool preferFastResult = false)
     {
         if (ContextCompat.CheckSelfPermission(this, global::Android.Manifest.Permission.AccessFineLocation)
             != Permission.Granted)
         {
-            return;   // 許可がなければ何もしない（クラッシュ防止）
+            return;
         }
 
         _locationManager ??= (LocationManager?)GetSystemService(LocationService);
         if (_locationManager is null) return;
 
-        var provider = _locationManager.IsProviderEnabled(LocationManager.GpsProvider)
-            ? LocationManager.GpsProvider
-            : LocationManager.NetworkProvider;
+        _locationReceivedThisCycle = false;
 
-        if (!_locationManager.IsProviderEnabled(provider)) return;
+        var gpsAvailable = !preferFastResult && _locationManager.IsProviderEnabled(LocationManager.GpsProvider);
+
+        if (gpsAvailable)
+        {
+            try
+            {
+                _locationManager.RequestSingleUpdate(
+                    LocationManager.GpsProvider,
+                    new SingleLocationListener(loc => OnLocationReceivedInternal(loc)),
+                    Looper.MainLooper);
+
+                _locationFallbackTimer?.Dispose();
+                _locationFallbackTimer = new System.Threading.Timer(
+                    _ => FallbackToNetworkProvider(), null, Settings.GPSWaitSeconds == 0 ? Timeout.Infinite : (int)(Settings.GPSWaitSeconds * 1000), System.Threading.Timeout.Infinite);
+                return;
+            }
+            catch (Exception ex)
+            {
+                global::Android.Util.Log.Error("TimerForegroundService", $"GPS取得失敗: {ex}");
+            }
+        }
+
+        RequestNetworkLocation();
+    }
+
+    private void FallbackToNetworkProvider()
+    {
+        if (_locationReceivedThisCycle) return;
+
+        global::Android.Util.Log.Debug("TimerForegroundService", "GPSタイムアウト。ネットワーク測位にフォールバックします");
+        RequestNetworkLocation();
+    }
+
+    private void RequestNetworkLocation()
+    {
+        if (_locationManager is null) return;
+        if (!_locationManager.IsProviderEnabled(LocationManager.NetworkProvider)) return;
 
         try
         {
             _locationManager.RequestSingleUpdate(
-                provider,
-                new SingleLocationListener(OnLocationReceived),
+                LocationManager.NetworkProvider,
+                new SingleLocationListener(loc => OnLocationReceivedInternal(loc)),
                 Looper.MainLooper);
         }
         catch (Exception ex)
         {
-            //global::Android.Util.Log.Error("TimerForegroundService", $"位置情報取得失敗: {ex}");
+            global::Android.Util.Log.Error("TimerForegroundService", $"ネットワーク測位取得失敗: {ex}");
         }
     }
+
+    private void OnLocationReceivedInternal(global::Android.Locations.Location location)
+    {
+        _locationReceivedThisCycle = true;
+        _locationFallbackTimer?.Dispose();
+        _locationFallbackTimer = null;
+
+        OnLocationReceived(location);
+    }
+
+
+
 
     private void OnLocationReceived(global::Android.Locations.Location location)
     {
@@ -163,6 +210,8 @@ public class TimerForegroundService : Service
     {
         _locationTimer?.Dispose();
         _locationTimer = null;
+        _locationFallbackTimer?.Dispose();
+        _locationFallbackTimer = null;
         IsLocationRunning = false;
 
         MaybeStopServiceIfIdle();
@@ -297,6 +346,7 @@ public class TimerForegroundService : Service
     {
         _timer?.Dispose();
         _locationTimer?.Dispose();
+        _locationFallbackTimer?.Dispose();
         IsRunning = false;
         IsLocationRunning = false;
         base.OnDestroy();

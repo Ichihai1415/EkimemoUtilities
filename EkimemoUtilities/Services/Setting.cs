@@ -43,4 +43,10 @@ public static class Settings
         get => Preferences.Get("hide_timer_enabled", false);
         set => Preferences.Set("hide_timer_enabled", value);
     }
+
+    public static double GPSWaitSeconds
+    {
+        get => Preferences.Get("gps_wait_seconds", 8d);
+        set => Preferences.Set("gps_wait_seconds", value);
+    }
 }

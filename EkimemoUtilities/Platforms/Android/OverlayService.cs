@@ -238,13 +238,13 @@ public class OverlayService : IOverlayService
             };
             _buttonRow.SetGravity(GravityFlags.CenterHorizontal);
 
-            var startButton = new global::Android.Widget.Button(themedContext) { Text = "(RE)START", TextSize = 12 };
+            var startButton = new global::Android.Widget.Button(themedContext) { Text = "(RE)START" };
             startButton.SetTextColor(global::Android.Graphics.Color.White);
             startButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 0, 30, 60));
             startButton.Click += (s, e) => _timerController.Start(TimeSpan.FromSeconds(Settings.DurationSeconds));
 
 
-            var stopButton = new global::Android.Widget.Button(themedContext) { Text = "RESET", TextSize = 12 };
+            var stopButton = new global::Android.Widget.Button(themedContext) { Text = "RESET" };
             stopButton.SetTextColor(global::Android.Graphics.Color.White);
             stopButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 0, 30, 60));
             stopButton.Click += (s, e) =>
@@ -411,7 +411,7 @@ public class OverlayService : IOverlayService
             ? $"S: {(spd * 3.6):F1}km/h"
             : "S: ---km/h";
 
-        var srcText = "[GPS]";
+        var srcText = info.Value.Provider == "gps" ? "[G]" : "[N]";
         var timeText = info.Value.Timestamp.ToString("HH:mm:ss");
         var attrText = stationInfo?.Attr is string attr ? $"T: {attr}" : "";
         var distText = stationInfo?.Lat is double lat && stationInfo?.Lon is double lon ? $"D: {GetDistance(info.Value.Latitude, info.Value.Longitude, lat, lon):0}m" : "";

@@ -62,6 +62,18 @@
                         ValueChanged="OnIntervalChanged" />
                 </HorizontalStackLayout>
 
+                <Label Text="GPS Wait Before Alternative :&#10; Alternative: by Network. If 0, not use."/>
+                <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
+                    <Label x:Name="GPSWaitLabel" Text="---" Margin="0,6,0,0"  FontSize="Large"/>
+                    <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>
+                    <Stepper x:Name="GPSWaitStepper"
+                         Minimum="0"
+                         Maximum="60"
+                         Increment="0.1"
+                         ValueChanged="OnGPSWaitChanged" />
+                </HorizontalStackLayout>
+
+
                 <HorizontalStackLayout>
                     <CheckBox Margin="-10,10,0,-10" x:Name="VibrationCheckBox" IsChecked="True" CheckedChanged="OnVibrationCheckBoxChanged"/>
                     <Label Margin="0,22,0,-10" Text="Enable Vibration">

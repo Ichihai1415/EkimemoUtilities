@@ -25,7 +25,8 @@ public class LocationTracker : ILocationTracker
             Altitude: location.HasAltitude ? location.Altitude : null,
             Speed: location.HasSpeed ? location.Speed : 0,
             AccuracyMeters: location.HasAccuracy ? location.Accuracy : null,
-            Timestamp: DateTime.Now);
+            Timestamp: DateTime.Now,
+            Provider: location.Provider);
 
         Last = info;
         LocationChanged?.Invoke(info);
