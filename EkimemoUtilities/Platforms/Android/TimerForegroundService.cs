@@ -105,7 +105,7 @@ public class TimerForegroundService : Service
         }
         catch (Exception ex)
         {
-            global::Android.Util.Log.Error("TimerForegroundService", $"位置情報取得失敗: {ex}");
+            //global::Android.Util.Log.Error("TimerForegroundService", $"位置情報取得失敗: {ex}");
         }
     }
 
@@ -309,6 +309,8 @@ public class TimerForegroundService : Service
         ShowNotification(ChannelId_TimerCompletion, NotificationId_TimerCompletion, "タイマー終了", "設定した時間が経過しました", global::Android.Resource.Drawable.IcLockIdleAlarm);
     }
 
+    public const string PackageName_Ekimemo = "jp.mfapps.loc.ekimemo";
+
 
     internal void ShowNotification(string channelId, int notifyId, string title, string text, int icon)
     {
@@ -319,7 +321,7 @@ public class TimerForegroundService : Service
                 .SetContentText(text)?
                 .SetSmallIcon(icon)?
                 .SetAutoCancel(true)?
-                .SetContentIntent(CreateOpenAppPendingIntent())?
+                .SetContentIntent(CreateOpenAppPendingIntent(PackageName_Ekimemo))?
                 .Build();
 
             NotificationManagerCompat.From(this)?.Notify(notifyId, notification);

@@ -191,8 +191,8 @@ public class OverlayService : IOverlayService
 
             _stationLabel = new TextView(themedContext)
             {
-                Text = GetStation(_locationTracker.Last),
-                TextSize = 20
+                Text = GetStation(_locationTracker.Last).Name,
+                TextSize = 18
             };
             _stationLabel.SetTextColor(global::Android.Graphics.Color.White);
             _stationLabel.Gravity = GravityFlags.CenterHorizontal;
@@ -236,14 +236,15 @@ public class OverlayService : IOverlayService
             {
                 Orientation = global::Android.Widget.Orientation.Horizontal
             };
+            _buttonRow.SetGravity(GravityFlags.CenterHorizontal);
 
-            var startButton = new global::Android.Widget.Button(themedContext) { Text = "(RE)START" };
+            var startButton = new global::Android.Widget.Button(themedContext) { Text = "(RE)START", TextSize = 12 };
             startButton.SetTextColor(global::Android.Graphics.Color.White);
             startButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 0, 30, 60));
             startButton.Click += (s, e) => _timerController.Start(TimeSpan.FromSeconds(Settings.DurationSeconds));
 
 
-            var stopButton = new global::Android.Widget.Button(themedContext) { Text = "RESET" };
+            var stopButton = new global::Android.Widget.Button(themedContext) { Text = "RESET", TextSize = 12 };
             stopButton.SetTextColor(global::Android.Graphics.Color.White);
             stopButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 0, 30, 60));
             stopButton.Click += (s, e) =>
@@ -387,12 +388,13 @@ public class OverlayService : IOverlayService
 
     private void OnLocationChanged(LocationInfo location)
     {
-        _locationLabel?.Text = FormatLocation(location);
-        _stationLabel?.Text = GetStation(location);
+        var stationInfo = GetStation(location);
+        _stationLabel?.Text = stationInfo.Name;
+        _locationLabel?.Text = FormatLocation(location, stationInfo);
         VisibilityUpdate();
     }
 
-    private string FormatLocation(LocationInfo? info)
+    private string FormatLocation(LocationInfo? info, StationInfo? stationInfo = null)
     {
         if (!_locationTracker.IsRunning) return "Getting location is off.";
         if (info is null) return "Waiting for location...";
@@ -408,18 +410,55 @@ public class OverlayService : IOverlayService
         var speedText = info.Value.Speed is double spd
             ? $"S: {(spd * 3.6):F1}km/h"
             : "S: ---km/h";
-        return $"{info.Value.Latitude:F6}, {info.Value.Longitude:F6}\n{altitudeText} {accuracyText} {speedText}";
+
+        var srcText = "[GPS]";
+        var timeText = info.Value.Timestamp.ToString("HH:mm:ss");
+        var attrText = stationInfo?.Attr is string attr ? $"T: {attr}" : "";
+        var distText = stationInfo?.Lat is double lat && stationInfo?.Lon is double lon ? $"D: {GetDistance(info.Value.Latitude, info.Value.Longitude, lat, lon):0}m" : "";
+
+        return $"{srcText}  {timeText}  {attrText}  {distText}\n{altitudeText}  {accuracyText}  {speedText}";
+    }
+
+    public static double GetDistance(double lat1, double lon1, double lat2, double lon2)// 単位: メートル
+    {
+        //global::Android.Util.Log.Debug("Ichihai1415.EkimemoUtilitiens.GetDistance", $"{lat1}, {lon1} / {lat2}, {lon2}");
+
+        const double earthRadius = 6371000;
+
+        double dLat = ToRadians(lat2 - lat1);
+        double dLon = ToRadians(lon2 - lon1);
+
+        double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                   Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
+                   Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+        double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+        return earthRadius * c;
+    }
+
+    private static double ToRadians(double degrees)
+    {
+        return degrees * Math.PI / 180.0;
     }
 
     internal string lastStationName = "";
 
-    public string GetStation(LocationInfo? info)
+    public class StationInfo
     {
-        if (MauiProgram.geojson is null) return "No station data!";
-        if (!_locationTracker.IsRunning) return "";
-        if (info is null) return "";
+        public string? Name { get; set; } = null;
+        public string? Attr { get; set; } = null;
+        public double? Lat { get; set; } = null;
+        public double? Lon { get; set; } = null;
+    }
 
-        var stationName = MauiProgram.geojson.FindName(info.Value.Latitude, info.Value.Longitude);
+    public StationInfo GetStation(LocationInfo? info)
+    {
+        if (MauiProgram.geojson is null) return new StationInfo { Name = "No station data!" };
+        if (!_locationTracker.IsRunning) return new StationInfo { Name = "" };
+        if (info is null) return new StationInfo { Name = "" };
+
+        var (stationName, attrTmp, lat, lon) = MauiProgram.geojson.FindName(info.Value.Latitude, info.Value.Longitude);
         if (stationName != null)
         {
             //debug
@@ -439,7 +478,9 @@ public class OverlayService : IOverlayService
             }
             lastStationName = stationName!;
         }
-        return stationName ?? "(No matching station)";
+        return stationName == null ? new StationInfo { Name = "(No matching station)" } :
+            new StationInfo { Name = stationName, Attr = attrTmp, Lat = lat, Lon = lon };
+
     }
 
     private void Vibrate()

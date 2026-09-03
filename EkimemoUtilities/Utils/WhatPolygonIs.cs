@@ -82,9 +82,10 @@ namespace EkimemoUtilities.Utils
                 FC = JsonSerializer.Deserialize<FeatureCollection>(json);
             }
 
-            public string? FindName(double lat, double lon)
+            public (string?, string?, double?, double?) FindName(double lat, double lon)
             {
-                return FindContainingPolygon(FC, lat, lon)?.properties?.name;
+                var prop = FindContainingPolygon(FC, lat, lon)?.properties;
+                return (prop?.name, prop?.attr, prop?.lat, prop?.lng);
             }
 
             public FeatureCollection FC { get; set; }
@@ -112,6 +113,9 @@ namespace EkimemoUtilities.Utils
             public class Property
             {
                 public string name { get; set; }
+                public string attr { get; set; }
+                public double lat { get; set; }
+                public double lng { get; set; }
 
             }
 

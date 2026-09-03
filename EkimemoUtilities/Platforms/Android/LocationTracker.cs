@@ -1,6 +1,5 @@
 ﻿using Android.Content;
 using Android.OS;
-using EkimemoUtilities.Platforms.Android;
 using EkimemoUtilities.Services;
 using AndroidApplication = Android.App.Application;
 
@@ -26,7 +25,7 @@ public class LocationTracker : ILocationTracker
             Altitude: location.HasAltitude ? location.Altitude : null,
             Speed: location.HasSpeed ? location.Speed : 0,
             AccuracyMeters: location.HasAccuracy ? location.Accuracy : null,
-            TimestampUtc: DateTime.UtcNow);
+            Timestamp: DateTime.Now);
 
         Last = info;
         LocationChanged?.Invoke(info);
