@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.Ichihai1415.EkimemoUtilities" android:versionName="1.0.2" android:versionCode="3">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.Ichihai1415.EkimemoUtilities" android:versionName="1.0.3" android:versionCode="4">
 	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:supportsRtl="true" android:label="駅メモUtil">
 		<service android:name=".TimerForegroundService" android:foregroundServiceType="location" android:exported="false" />
 	</application>
