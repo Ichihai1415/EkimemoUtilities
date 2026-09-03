@@ -51,7 +51,7 @@
                     ValueChanged="OnDurationChanged" />
                 </HorizontalStackLayout>
 
-                <Label Text="Get Location Interval: &#10; (After changed, restert Getting Location!)" />
+                <Label Text="Get Location Interval: &#10; (After changed, restart Getting Location!)" />
                 <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
                     <Label x:Name="IntervalLabel" Text="---" Margin="0,6,0,0"  FontSize="Large"/>
                     <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>
@@ -62,7 +62,7 @@
                         ValueChanged="OnIntervalChanged" />
                 </HorizontalStackLayout>
 
-                <Label Text="GPS Wait Before Alternative :&#10; Alternative: by Network. If 0, not use."/>
+                <Label Text="GPS Wait Time Before Use an Alternative:&#10; (Alternative: Network-based. If set to 0, it is not used.)"/>
                 <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
                     <Label x:Name="GPSWaitLabel" Text="---" Margin="0,6,0,0"  FontSize="Large"/>
                     <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>

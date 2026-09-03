@@ -91,10 +91,15 @@ public class OverlayService : IOverlayService
 
             container.SetPadding(24, 16, 24, 16);
 
-            var headRow = new global::Android.Widget.LinearLayout(themedContext)
+            var headRow = new LinearLayout(themedContext)
             {
-                Orientation = global::Android.Widget.Orientation.Horizontal
+                Orientation = Orientation.Horizontal,
+                //LayoutParameters = new LinearLayout.LayoutParams(
+                //ViewGroup.LayoutParams.WrapContent,
+                //ViewGroup.LayoutParams.WrapContent
+                //)
             };
+
             /*
             var threeLine = new global::Android.Widget.TextView(themedContext)
             {
@@ -118,7 +123,7 @@ public class OverlayService : IOverlayService
             head.SetTextColor(global::Android.Graphics.Color.LightGray);
             head.Gravity = global::Android.Views.GravityFlags.Bottom;
             //head.Click += (s, e) => ToggleMinView();
-            headRow.AddView(head);
+            headRow.AddView(head, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f));
 
 
             var div_v2 = new global::Android.Widget.TextView(themedContext)
@@ -283,6 +288,7 @@ public class OverlayService : IOverlayService
                 ? global::Android.Views.WindowManagerTypes.ApplicationOverlay
                 : global::Android.Views.WindowManagerTypes.Phone;
 
+
             var layoutParams = new global::Android.Views.WindowManagerLayoutParams(
                 global::Android.Views.WindowManagerLayoutParams.WrapContent,
                 global::Android.Views.WindowManagerLayoutParams.WrapContent,
@@ -298,11 +304,7 @@ public class OverlayService : IOverlayService
             _windowManager?.AddView(_overlayView, layoutParams);
 
 
-
-
-
             IsShowing = true;
-
 
             TimerForegroundService.RemainingChanged += OnRemainingChanged;
             _locationTracker.LocationChanged += OnLocationChanged;
@@ -416,7 +418,7 @@ public class OverlayService : IOverlayService
         var attrText = stationInfo?.Attr is string attr ? $"T: {attr}" : "";
         var distText = stationInfo?.Lat is double lat && stationInfo?.Lon is double lon ? $"D: {GetDistance(info.Value.Latitude, info.Value.Longitude, lat, lon):0}m" : "";
 
-        return $"{srcText}  {timeText}  {attrText}  {distText}\n{altitudeText}  {accuracyText}  {speedText}";
+        return $"{srcText} {timeText}  {attrText}  {distText}\n{altitudeText}  {accuracyText}  {speedText}";
     }
 
     public static double GetDistance(double lat1, double lon1, double lat2, double lon2)// 単位: メートル
