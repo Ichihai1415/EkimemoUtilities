@@ -7,6 +7,7 @@ using Android.Views;
 using Android.Widget;
 using AndroidX.Core.App;
 using EkimemoUtilities.Services;
+using EkimemoUtilities.Utils;
 using Microsoft.Maui.Controls.Platform;
 
 
@@ -391,8 +392,14 @@ public class OverlayService : IOverlayService
     private void OnLocationChanged(LocationInfo location)
     {
         var stationInfo = GetStation(location);
+        var nearStation = NearStations.GetNearStations(MauiProgram.geojson!.FC, location.Latitude, location.Longitude, 10, 3);
         _stationLabel?.Text = stationInfo.Name;
-        _locationLabel?.Text = FormatLocation(location, stationInfo);
+        var nearStationText = "";
+        foreach (var (name, dist) in nearStation)
+        {
+            nearStationText += $"\n{name}: {dist}m";
+        }
+        _locationLabel?.Text = FormatLocation(location, stationInfo) + nearStationText;
         VisibilityUpdate();
     }
 
@@ -409,40 +416,18 @@ public class OverlayService : IOverlayService
             ? $"A: {acc:F1}m"
             : "A: ---m";
 
-        var speedText = info.Value.Speed is double spd
+        var speedText = info.Value.Speed is double spd && info.Value.Provider == "gps"
             ? $"S: {(spd * 3.6):F1}km/h"
             : "S: ---km/h";
 
         var srcText = info.Value.Provider == "gps" ? "[G]" : "[N]";
         var timeText = info.Value.Timestamp.ToString("HH:mm:ss");
         var attrText = stationInfo?.Attr is string attr ? $"T: {attr}" : "";
-        var distText = stationInfo?.Lat is double lat && stationInfo?.Lon is double lon ? $"D: {GetDistance(info.Value.Latitude, info.Value.Longitude, lat, lon):0}m" : "";
+        var distText = stationInfo?.Lat is double lat && stationInfo?.Lon is double lon ? $"D: {Common.GetDistance(info.Value.Latitude, info.Value.Longitude, lat, lon):0}m" : "";
 
         return $"{srcText} {timeText}  {attrText}  {distText}\n{altitudeText}  {accuracyText}  {speedText}";
     }
 
-    public static double GetDistance(double lat1, double lon1, double lat2, double lon2)// 単位: メートル
-    {
-        //global::Android.Util.Log.Debug("Ichihai1415.EkimemoUtilitiens.GetDistance", $"{lat1}, {lon1} / {lat2}, {lon2}");
-
-        const double earthRadius = 6371000;
-
-        double dLat = ToRadians(lat2 - lat1);
-        double dLon = ToRadians(lon2 - lon1);
-
-        double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                   Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
-                   Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-
-        double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-
-        return earthRadius * c;
-    }
-
-    private static double ToRadians(double degrees)
-    {
-        return degrees * Math.PI / 180.0;
-    }
 
     internal string lastStationName = "";
 
@@ -472,7 +457,7 @@ public class OverlayService : IOverlayService
                 //ShowNotification(TimerForegroundService.ChannelId_Station, TimerForegroundService.NotificationId_Station, "チェックインしよう！", stationName + "駅エリアに入りました", global::Android.Resource.Drawable.IcDialogInfo);
 
                 Vibrate();
-                if (_timerController.IsRunning)
+                if (_timerController.IsRunning)//todo: 設定
                 {
                     _timerController.Stop();
                     _timeLabel?.Text = FormatTime(0);

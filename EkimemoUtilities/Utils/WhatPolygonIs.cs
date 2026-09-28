@@ -75,50 +75,5 @@ namespace EkimemoUtilities.Utils
         }
 
 
-        public class GeoJSON
-        {
-            public GeoJSON(string json)
-            {
-                FC = JsonSerializer.Deserialize<FeatureCollection>(json);
-            }
-
-            public (string?, string?, double?, double?) FindName(double lat, double lon)
-            {
-                var prop = FindContainingPolygon(FC, lat, lon)?.properties;
-                return (prop?.name, prop?.attr, prop?.lat, prop?.lng);
-            }
-
-            public FeatureCollection FC { get; set; }
-
-            public class FeatureCollection
-            {
-                public string type { get; set; }
-                public List<Feature> features { get; set; }
-            }
-
-            public class Feature
-            {
-                public string type { get; set; }
-                public Geometry geometry { get; set; }
-                public Property properties { get; set; }
-            }
-
-            public class Geometry
-            {
-                public string type { get; set; }
-                public object coordinates { get; set; }
-            }
-
-
-            public class Property
-            {
-                public string name { get; set; }
-                public string attr { get; set; }
-                public double lat { get; set; }
-                public double lng { get; set; }
-
-            }
-
-        }
     }
 }

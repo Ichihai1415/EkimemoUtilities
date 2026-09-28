@@ -6,7 +6,7 @@ namespace EkimemoUtilities
 {
     public static class MauiProgram
     {
-        internal static WhatPolygonIs.GeoJSON? geojson = null;
+        internal static GeoJSON? geojson = null;
 
         public static MauiApp CreateMauiApp()
         {
@@ -22,7 +22,7 @@ namespace EkimemoUtilities
             using var stream = FileSystem.OpenAppPackageFileAsync("voronoi.geojson").Result;
             using var reader = new StreamReader(stream);
             var contents = reader.ReadToEnd();
-            geojson = new WhatPolygonIs.GeoJSON(contents);
+            geojson = new GeoJSON(contents);
 
 
 #if ANDROID
