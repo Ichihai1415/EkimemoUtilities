@@ -53,6 +53,7 @@ public class LocationTracker : ILocationTracker
         intent.SetAction(TimerForegroundService.ActionStopLocation);
         context.StartService(intent);
 
+        Last = null;
         RunningChanged?.Invoke(false);
     }
 }

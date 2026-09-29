@@ -13,17 +13,10 @@ using Microsoft.Maui.Controls.Platform;
 
 namespace EkimemoUtilities.Platforms.Android;
 
-public class OverlayService : IOverlayService
+public class OverlayService(ITimerController timerController, ILocationTracker locationTracker) : IOverlayService
 {
-    private readonly ITimerController _timerController;
-    private readonly ILocationTracker _locationTracker;
-
-    public OverlayService(ITimerController timerController, ILocationTracker locationTracker)
-    {
-        _timerController = timerController;
-        _locationTracker = locationTracker;
-    }
-
+    private readonly ITimerController _timerController = timerController;
+    private readonly ILocationTracker _locationTracker = locationTracker;
     private global::Android.Views.IWindowManager? _windowManager;
     private global::Android.Views.View? _overlayView;
     private global::Android.Widget.TextView? _timeLabel;
@@ -392,7 +385,7 @@ public class OverlayService : IOverlayService
     private void OnLocationChanged(LocationInfo location)
     {
         var stationInfo = GetStation(location);
-        var nearStation = NearStations.GetNearStations(MauiProgram.geojson!.FC, location.Latitude, location.Longitude, 10, 3);
+        var nearStation = NearStations.GetNearStations(MauiProgram.geojson!.FC, location.Latitude, location.Longitude, Settings.NearSt_Distance, Settings.NearSt_MaxCount);
         _stationLabel?.Text = stationInfo.Name;
         var nearStationText = "";
         foreach (var (name, dist) in nearStation)
@@ -457,11 +450,12 @@ public class OverlayService : IOverlayService
                 //ShowNotification(TimerForegroundService.ChannelId_Station, TimerForegroundService.NotificationId_Station, "チェックインしよう！", stationName + "駅エリアに入りました", global::Android.Resource.Drawable.IcDialogInfo);
 
                 Vibrate();
-                if (_timerController.IsRunning)//todo: 設定
-                {
-                    _timerController.Stop();
-                    _timeLabel?.Text = FormatTime(0);
-                }
+                if (_timerController.IsRunning)
+                    if (!Settings.ResetTimer_OnlyGPS || info.Value.Provider != "gps")
+                    {
+                        _timerController.Stop();
+                        _timeLabel?.Text = FormatTime(0);
+                    }
             }
             lastStationName = stationName!;
         }

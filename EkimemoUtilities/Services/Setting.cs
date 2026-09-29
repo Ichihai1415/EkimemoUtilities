@@ -2,22 +2,16 @@
 
 public static class Settings
 {
-    private const string DurationSecondsKey = "timer_duration_seconds";
-    private const int DS_DefaultSeconds = 295;
-
     public static int DurationSeconds
     {
-        get => Preferences.Get(DurationSecondsKey, DS_DefaultSeconds);
-        set => Preferences.Set(DurationSecondsKey, value);
+        get => Preferences.Get("timer_duration_seconds", 295);
+        set => Preferences.Set("timer_duration_seconds", value);
     }
-
-    private const string IntervalSecondsKey = "location_interval_seconds";
-    private const int II_DefaultSeconds = 5;
 
     public static int IntervalSeconds
     {
-        get => Preferences.Get(IntervalSecondsKey, II_DefaultSeconds);
-        set => Preferences.Set(IntervalSecondsKey, value);
+        get => Preferences.Get("location_interval_seconds", 5);
+        set => Preferences.Set("location_interval_seconds", value);
     }
 
     public static bool VibrationEnabled
@@ -49,4 +43,23 @@ public static class Settings
         get => Preferences.Get("gps_wait_seconds", 8d);
         set => Preferences.Set("gps_wait_seconds", value);
     }
+
+    public static int NearSt_Distance
+    {
+        get => Preferences.Get("near_st_distance", 5);
+        set => Preferences.Set("near_st_distance", value);
+    }
+
+    public static int NearSt_MaxCount
+    {
+        get => Preferences.Get("near_st_maxcount", 3);
+        set => Preferences.Set("near_st_maxcount", value);
+    }
+
+    public static bool ResetTimer_OnlyGPS
+    {
+        get => Preferences.Get("reset_timer_only_gps", true);
+        set => Preferences.Set("reset_timer_only_gps", value);
+    }
+
 }

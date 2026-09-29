@@ -41,7 +41,7 @@
                 <Label Text="Timer Duration:"/>
                 <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
 
-                    <Label x:Name="DurationLabel" Text="---" Margin="0,6,0,0"  FontSize="Large"/>
+                    <Label x:Name="DurationLabel" Text="---" Margin="0,6,0,0" FontSize="Large"/>
                     <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>
 
                     <Stepper x:Name="DurationStepper"
@@ -53,7 +53,7 @@
 
                 <Label Text="Get Location Interval: &#10; (After changed, restart Getting Location!)" />
                 <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
-                    <Label x:Name="IntervalLabel" Text="---" Margin="0,6,0,0"  FontSize="Large"/>
+                    <Label x:Name="IntervalLabel" Text="---" Margin="0,6,0,0" FontSize="Large"/>
                     <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>
                     <Stepper x:Name="IntervalStepper"
                         Minimum="1"
@@ -64,7 +64,7 @@
 
                 <Label Text="GPS Wait Time Before Use an Alternative:&#10; (Alternative: Network-based. If set to 0, it is not used.)"/>
                 <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
-                    <Label x:Name="GPSWaitLabel" Text="---" Margin="0,6,0,0"  FontSize="Large"/>
+                    <Label x:Name="GPSWaitLabel" Text="---" Margin="0,6,0,0" FontSize="Large"/>
                     <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>
                     <Stepper x:Name="GPSWaitStepper"
                          Minimum="0"
@@ -73,6 +73,27 @@
                          ValueChanged="OnGPSWaitChanged" />
                 </HorizontalStackLayout>
 
+                <Label Text="ShowNearStation - Distance:&#10; (If set to 0, it is not used.)" />
+                <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
+                    <Label x:Name="SNSDistanceLabel" Text="---" Margin="0,6,0,0" FontSize="Large"/>
+                    <Label Text="km" Margin="0,18,0,0" FontSize="Small"/>
+                    <Stepper x:Name="SNSDistanceStepper"
+                        Minimum="1"
+                        Maximum="30"
+                        Increment="1"
+                        ValueChanged="SNSDistanceChanged" />
+                </HorizontalStackLayout>
+
+                <Label Text="ShowNearStation - MaxCount:&#10; (If set to 0, it is not used.)" />
+                <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
+                    <Label x:Name="SNSCountLabel" Text="---" Margin="0,6,0,0" FontSize="Large"/>
+                    <Label Text="stations" Margin="0,18,0,0" FontSize="Small"/>
+                    <Stepper x:Name="SNSCountStepper"
+                        Minimum="1"
+                        Maximum="30"
+                        Increment="1"
+                        ValueChanged="SNSCountChanged" />
+                </HorizontalStackLayout>
 
                 <HorizontalStackLayout>
                     <CheckBox Margin="-10,10,0,-10" x:Name="VibrationCheckBox" IsChecked="True" CheckedChanged="OnVibrationCheckBoxChanged"/>
@@ -84,7 +105,7 @@
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout>
-                    <CheckBox Margin="-10,0,0,0"  x:Name="NotificationCheckBox" IsChecked="True" CheckedChanged="OnNotificationCheckBoxChanged"/>
+                    <CheckBox Margin="-10,0,0,0" x:Name="NotificationCheckBox" IsChecked="True" CheckedChanged="OnNotificationCheckBoxChanged"/>
                     <Label Margin="0,12,0,0" Text="Enable Notification">
                         <Label.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnNotificationLabelTapped" />
@@ -94,8 +115,8 @@
 
 
                 <HorizontalStackLayout>
-                    <CheckBox Margin="-10,10,0,-10"  x:Name="HideLocationCheckBox" IsChecked="False" CheckedChanged="OnHideLocationCheckBoxChanged"/>
-                    <Label Margin="0,22,0,-10" Text="Hide Location (overlay)">
+                    <CheckBox Margin="-10,5,0,-10" x:Name="HideLocationCheckBox" IsChecked="False" CheckedChanged="OnHideLocationCheckBoxChanged"/>
+                    <Label Margin="0,17,0,-10" Text="Hide Location (overlay)">
                         <Label.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnHideLocationLabelTapped" />
                         </Label.GestureRecognizers>
@@ -103,10 +124,20 @@
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout>
-                    <CheckBox Margin="-10,0,0,0"  x:Name="HideTimerCheckBox" IsChecked="False" CheckedChanged="OnHideTimerCheckBoxChanged"/>
+                    <CheckBox Margin="-10,0,0,0" x:Name="HideTimerCheckBox" IsChecked="False" CheckedChanged="OnHideTimerCheckBoxChanged"/>
                     <Label Margin="0,12,0,0" Text="Hide Timer (overlay)">
                         <Label.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnHideTimerLabelTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
+
+
+                <HorizontalStackLayout>
+                    <CheckBox Margin="-10,5,0,0" x:Name="ResetTimerOnlyGPSCheckBox" IsChecked="True" CheckedChanged="OnResetTimerOnlyGPSCheckBoxChanged"/>
+                    <Label Margin="0,17,0,0" Text="Reset Time Only When Using GPS">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnResetTimerOnlyGPSLabelTapped" />
                         </Label.GestureRecognizers>
                     </Label>
                 </HorizontalStackLayout>
