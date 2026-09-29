@@ -73,7 +73,7 @@
                          ValueChanged="OnGPSWaitChanged" />
                 </HorizontalStackLayout>
 
-                <Label Text="ShowNearStation - Distance:&#10; (If set to 0, it is not used.)" />
+                <Label Text="Show Near Station - Distance:&#10; (If set to 0, it is not used.)" />
                 <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
                     <Label x:Name="SNSDistanceLabel" Text="---" Margin="0,6,0,0" FontSize="Large"/>
                     <Label Text="km" Margin="0,18,0,0" FontSize="Small"/>
@@ -84,7 +84,7 @@
                         ValueChanged="SNSDistanceChanged" />
                 </HorizontalStackLayout>
 
-                <Label Text="ShowNearStation - MaxCount:&#10; (If set to 0, it is not used.)" />
+                <Label Text="Show Near Station - Max Count:&#10; (If set to 0, it is not used.)" />
                 <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
                     <Label x:Name="SNSCountLabel" Text="---" Margin="0,6,0,0" FontSize="Large"/>
                     <Label Text="stations" Margin="0,18,0,0" FontSize="Small"/>

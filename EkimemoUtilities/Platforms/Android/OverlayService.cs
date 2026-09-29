@@ -432,6 +432,7 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
 
 
     internal string lastStationName = "";
+    internal string lastStationName_gps = "";
 
     public class StationInfo
     {
@@ -460,14 +461,30 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
 
                 Vibrate();
                 if (_timerController.IsRunning)
-                    if (!Settings.ResetTimer_OnlyGPS || info.Value.Provider != "gps")
+                    if (!Settings.ResetTimer_OnlyGPS)
                     {
                         _timerController.Stop();
                         _timeLabel?.Text = FormatTime(0);
                     }
             }
+
             lastStationName = stationName!;
+
+            if (info.Value.Provider == "gps")
+            {
+                if (_timerController.IsRunning)
+                    if (Settings.ResetTimer_OnlyGPS)
+                    {
+                        if (lastStationName_gps != stationName)
+                        {
+                            _timerController.Stop();
+                            _timeLabel?.Text = FormatTime(0);
+                        }
+                    }
+                lastStationName_gps = stationName!;
+            }
         }
+
         return stationName == null ? new StationInfo { Name = "(No matching station)" } :
             new StationInfo { Name = stationName, Attr = attrTmp, Lat = lat, Lon = lon };
 

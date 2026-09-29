@@ -1,6 +1,5 @@
 ﻿using Android.Content;
 using Android.OS;
-using EkimemoUtilities.Platforms.Android;
 using EkimemoUtilities.Services;
 using AndroidApplication = Android.App.Application;
 
