@@ -78,12 +78,12 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
             var background = new GradientDrawable();
             background.SetShape(ShapeType.Rectangle);
             background.SetCornerRadius(16f * density);//16dpを実ピクセルに変換
-            background.SetColor(global::Android.Graphics.Color.Argb(192, 30, 60, 90));
+            background.SetColor(global::Android.Graphics.Color.Argb(Settings.OverlayAlpha, 30, 60, 90));
             container.SetBackground(background);
 
 
 
-            container.SetPadding(24, 16, 24, 16);
+            container.SetPadding(16, 16, 16, 16);
 
             var headRow = new LinearLayout(themedContext)
             {
@@ -190,7 +190,7 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
 
             _stationLabel = new TextView(themedContext)
             {
-                Text = GetStation(_locationTracker.Last).Name,
+                //Text = GetStation(_locationTracker.Last).Name,
                 TextSize = 18
             };
             _stationLabel.SetTextColor(global::Android.Graphics.Color.White);
@@ -201,7 +201,7 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
 
             _locationLabel = new TextView(themedContext)
             {
-                Text = FormatLocation(_locationTracker.Last),
+                //Text = FormatLocation(_locationTracker.Last),
                 TextSize = 12
             };
             _locationLabel.SetTextColor(global::Android.Graphics.Color.White);
@@ -209,6 +209,7 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
 
             container.AddView(_locationLabel);
 
+            OnLocationChanged(_locationTracker.Last);
 
             _div2 = new global::Android.Widget.TextView(themedContext)
             {
@@ -240,6 +241,7 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
             var startButton = new global::Android.Widget.Button(themedContext) { Text = "(RE)START" };
             startButton.SetTextColor(global::Android.Graphics.Color.White);
             startButton.SetBackgroundColor(global::Android.Graphics.Color.Argb(127, 0, 30, 60));
+            //startButton.SetPadding(0, 0, 0, 0);//変わらん
             startButton.Click += (s, e) => _timerController.Start(TimeSpan.FromSeconds(Settings.DurationSeconds));
 
 
@@ -359,7 +361,7 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
 
     public void Toggle()
     {
-        global::Android.Util.Log.Debug("OverlayService", $"Toggle called. IsShowing={IsShowing}");
+        //global::Android.Util.Log.Debug("OverlayService", $"Toggle called. IsShowing={IsShowing}");
         if (IsShowing) Hide();
         else Show();
     }
@@ -382,10 +384,17 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
     private TextView? _locationLabel;
     private TextView? _stationLabel;
 
-    private void OnLocationChanged(LocationInfo location)
+
+    private void OnLocationChanged(LocationInfo? location)
     {
+        if (!_locationTracker.IsRunning)
+        {
+            _locationLabel?.Text = FormatLocation(null);
+            return;
+        }
         var stationInfo = GetStation(location);
-        var nearStation = NearStations.GetNearStations(MauiProgram.geojson!.FC, location.Latitude, location.Longitude, Settings.NearSt_Distance, Settings.NearSt_MaxCount);
+
+        var nearStation = NearStations.GetNearStations(MauiProgram.geojson!.FC, location?.Latitude ?? 0, location?.Longitude ?? 0, Settings.NearSt_Distance, Settings.NearSt_MaxCount);
         _stationLabel?.Text = stationInfo.Name;
         var nearStationText = "";
         foreach (var (name, dist) in nearStation)
@@ -550,6 +559,9 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
 
     internal void VisibilityUpdate()
     {
+        if (!_locationTracker.IsRunning)
+            _stationLabel?.Text = "";
+
         _div?.Visibility = _isMinimized || Settings.HideLocationEnabled ? ViewStates.Gone : ViewStates.Visible;
         _stationLabel?.Visibility = _isMinimized || Settings.HideLocationEnabled || _stationLabel?.Text == "" ? ViewStates.Gone : ViewStates.Visible;
         _locationLabel?.Visibility = _isMinimized || Settings.HideLocationEnabled ? ViewStates.Gone : ViewStates.Visible;

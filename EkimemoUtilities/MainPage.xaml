@@ -51,7 +51,7 @@
                     ValueChanged="OnDurationChanged" />
                 </HorizontalStackLayout>
 
-                <Label Text="Get Location Interval: &#10; (After changed, restart Getting Location!)" />
+                <Label Text="Get Location Interval: &#10; (You must restart Getting Location for apply)" />
                 <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
                     <Label x:Name="IntervalLabel" Text="---" Margin="0,6,0,0" FontSize="Large"/>
                     <Label Text="sec" Margin="0,18,0,0" FontSize="Small"/>
@@ -93,6 +93,17 @@
                         Maximum="30"
                         Increment="1"
                         ValueChanged="SNSCountChanged" />
+                </HorizontalStackLayout>
+
+                <Label Text="Overlay Alpha Value:&#10; (255: Completely non-transparent. You must reopen overlay for apply.)" />
+                <HorizontalStackLayout Margin="20,0,0,0" Spacing="4">
+                    <Label x:Name="OverlayAlphaLabel" Text="---" Margin="0,6,0,0" FontSize="Large"/>
+                    <Label Text="" Margin="0,18,0,0" FontSize="Small"/>
+                    <Stepper x:Name="OverlayAlphaStepper"
+                        Minimum="0"
+                        Maximum="255"
+                        Increment="1"
+                        ValueChanged="OverlayAlphaChanged" />
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout>

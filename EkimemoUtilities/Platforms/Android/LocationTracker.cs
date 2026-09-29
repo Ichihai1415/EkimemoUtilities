@@ -10,7 +10,7 @@ public class LocationTracker : ILocationTracker
     public bool IsRunning => TimerForegroundService.IsLocationRunning;
     public LocationInfo? Last { get; private set; }
 
-    public event Action<LocationInfo>? LocationChanged;
+    public event Action<LocationInfo?>? LocationChanged;
     public event Action<bool>? RunningChanged;
     public LocationTracker()
     {

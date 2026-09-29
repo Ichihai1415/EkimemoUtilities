@@ -106,6 +106,10 @@ namespace EkimemoUtilities
                 SNSCountStepper.Value = snsCount;
                 SNSCountLabel.Text = snsCount.ToString();
 
+                var overlayAlpha = Settings.OverlayAlpha;
+                OverlayAlphaStepper.Value = overlayAlpha;
+                OverlayAlphaLabel.Text = overlayAlpha.ToString();
+
                 _overlayService.Show();
                 ToggleOverlayButton.Text = _overlayService.IsShowing ? "Hide Overlay" : "Show Overlay";
                 ToggleOverlayButton.BackgroundColor = _overlayService.IsShowing ? Color.FromArgb("#2B0B98") : Color.FromArgb("#512BD4");
@@ -234,5 +238,14 @@ namespace EkimemoUtilities
         {
             ResetTimerOnlyGPSCheckBox.IsChecked = !ResetTimerOnlyGPSCheckBox.IsChecked;
         }
+
+
+        private void OverlayAlphaChanged(object sender, ValueChangedEventArgs e)
+        {
+            var value = (int)e.NewValue;
+            OverlayAlphaLabel.Text = value.ToString("0");
+            Settings.OverlayAlpha = value;
+        }
+
     }
 }

@@ -62,4 +62,10 @@ public static class Settings
         set => Preferences.Set("reset_timer_only_gps", value);
     }
 
+    public static int OverlayAlpha
+    {
+        get => Preferences.Get("overlay_alpha", 192);
+        set => Preferences.Set("overlay_alpha", value);
+    }
+
 }
