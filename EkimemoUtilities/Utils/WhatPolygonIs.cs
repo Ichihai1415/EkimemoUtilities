@@ -31,6 +31,8 @@ namespace EkimemoUtilities.Utils
         public static GeoJSON.Feature? FindContainingPolygon(GeoJSON.FeatureCollection fc, double lat, double lon)
         {
             var pt = new PointF((float)lon, (float)lat);
+            if (fc.features.Count == 0)
+                global::Android.Util.Log.Error("Ichihai1415.EkimemoUtilities", $"[WhatPolygonIs.FindContainingPolygon]fcのfeaturesが空です");
 
             foreach (var f in fc.features)
             {
@@ -67,7 +69,7 @@ namespace EkimemoUtilities.Utils
                     }
                 }
             }
-
+            global::Android.Util.Log.Error("Ichihai1415.EkimemoUtilities", "[WhatPolygonIs.FindContainingPolygon]該当ポリゴンなし");
             return null; // どのポリゴンにも属さない
         }
 

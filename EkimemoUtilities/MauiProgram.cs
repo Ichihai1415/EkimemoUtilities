@@ -23,6 +23,8 @@ namespace EkimemoUtilities
             using var reader = new StreamReader(stream);
             var contents = reader.ReadToEnd();
             geojson = new GeoJSON(contents);
+            //global::Android.Util.Log.Debug("Ichihai1415.EkimemoUtilities", $"[GeoJSON]FC.feature.count={geojson.FC.features.Count}");
+
 
 
 #if ANDROID

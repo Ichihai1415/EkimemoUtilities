@@ -20,26 +20,24 @@
 
             var (minLat, maxLat, minLon, maxLon) = BoundingBox(lat, lon, distKm);
 
-            fc.features = [.. fc.features
+            var candidates = fc.features
                 //.AsParallel() //並列化
                 .Where(p =>
                     p.properties.lat >= minLat && p.properties.lat <= maxLat &&
-                    p.properties.lng >= minLon && p.properties.lng <= maxLon)];
+                    p.properties.lng >= minLon && p.properties.lng <= maxLon)
+                .ToList();
 
             var seen = new HashSet<string>();
             var result = new List<(string Name, int Distance)>();
-            foreach (var f in fc.features)
+            foreach (var f in candidates)
             {
-                //if (f.geometry == null) continue;
-                //if(f.properties.lat == null || f.properties.lng == null) continue;
-
                 var dist = Common.GetDistance(lat, lon, f.properties.lat, f.properties.lng);
                 if (dist <= distKm * 1000)
                     if (seen.Add(f.properties.name))
                         result.Add((f.properties.name, (int)dist));
             }
             result.Sort((a, b) => a.Distance.CompareTo(b.Distance));
-            return [.. result.Count > maxCount ? result.Take(maxCount) : result];
+            return [.. result.Take(Math.Min(result.Count, maxCount))];
         }
 
 

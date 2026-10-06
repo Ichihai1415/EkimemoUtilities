@@ -40,7 +40,7 @@ public static class Settings
 
     public static double GPSWaitSeconds
     {
-        get => Preferences.Get("gps_wait_seconds", 8d);
+        get => Preferences.Get("gps_wait_seconds", 4d);
         set => Preferences.Set("gps_wait_seconds", value);
     }
 

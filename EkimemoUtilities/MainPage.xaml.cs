@@ -9,7 +9,7 @@ namespace EkimemoUtilities
         private readonly ITimerController _timerController;
         private readonly ILocationTracker _locationTracker;
 
-        const string Version = "v1.0.4";
+        const string Version = "v1.0.4.2";
         public MainPage(IOverlayService overlayService, ITimerController timerController, ILocationTracker locationTracker)
         {
             InitializeComponent();

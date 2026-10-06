@@ -6,7 +6,7 @@ namespace EkimemoUtilities.Utils
     {
         public static double GetDistance(double lat1, double lon1, double lat2, double lon2)// 単位: メートル
         {
-            //global::Android.Util.Log.Debug("Ichihai1415.EkimemoUtilitiens.GetDistance", $"{lat1}, {lon1} / {lat2}, {lon2}");
+            //global::Android.Util.Log.Debug("Ichihai1415.EkimemoUtilities", $"[Common.GetDistance]{lat1}, {lon1} / {lat2}, {lon2}");
 
             const double earthRadius = 6371000;
 
@@ -28,15 +28,21 @@ namespace EkimemoUtilities.Utils
         }
     }
 
-    public class GeoJSON(string json)
+    public class GeoJSON
     {
+        public GeoJSON(string json)
+        {
+            FC = JsonSerializer.Deserialize<FeatureCollection>(json)!;
+            //global::Android.Util.Log.Debug("Ichihai1415.EkimemoUtilities", $"[GeoJSON]FC.feature.count={FC.features.Count}");
+        }
+
         public (string?, string?, double?, double?) FindName(double lat, double lon)
         {
             var prop = WhatPolygonIs.FindContainingPolygon(FC, lat, lon)?.properties;
             return (prop?.name, prop?.attr, prop?.lat, prop?.lng);
         }
 
-        public FeatureCollection FC { get; set; } = JsonSerializer.Deserialize<FeatureCollection>(json)!;
+        public FeatureCollection FC { get; set; }
 
         public class FeatureCollection
         {
