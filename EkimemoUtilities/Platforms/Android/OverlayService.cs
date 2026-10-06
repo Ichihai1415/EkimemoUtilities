@@ -446,9 +446,13 @@ public class OverlayService(ITimerController timerController, ILocationTracker l
     {
         if (MauiProgram.geojson is null) return new StationInfo { Name = "No station data!" };
         if (!_locationTracker.IsRunning) return new StationInfo { Name = "" };
-        if (info is null) return new StationInfo { Name = "" };
+        if (!info.HasValue) return new StationInfo { Name = "" };
 
         var (stationName, attrTmp, lat, lon) = MauiProgram.geojson.FindName(info.Value.Latitude, info.Value.Longitude);
+        //test
+        if (stationName is null)
+            ShowNotification_Station("駅取得に失敗しました。", $"{info.Value.Latitude}, {info.Value.Longitude}");
+
         if (stationName != null)
         {
             //debug
